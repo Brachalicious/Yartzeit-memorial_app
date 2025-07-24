@@ -32,33 +32,47 @@ router.get('/upcoming', async (req, res) => {
       .execute();
     
     const now = new Date();
-    const currentYear = now.getFullYear();
     const upcomingYahrzeits = [];
     
     for (const entry of entries) {
       try {
+        console.log(`Processing entry: ${entry.name}, Hebrew date: ${entry.hebrew_death_date}`);
+        
         // Parse the Hebrew death date
         const [hebrewDay, hebrewMonth, hebrewYear] = entry.hebrew_death_date.split('/').map(Number);
+        console.log(`Parsed Hebrew date: Day=${hebrewDay}, Month=${hebrewMonth}, Year=${hebrewYear}`);
         
-        // Find next occurrence in current Hebrew year
+        // Get current Hebrew year
         const currentHebrewYear = new HDate().getFullYear();
+        console.log(`Current Hebrew year: ${currentHebrewYear}`);
         
+        // Try current Hebrew year first, then next year
         for (let yearOffset = 0; yearOffset <= 1; yearOffset++) {
           const targetYear = currentHebrewYear + yearOffset;
-          const yahrzeitDate = new HDate(hebrewDay, hebrewMonth, targetYear);
-          const gregorianDate = yahrzeitDate.greg();
+          console.log(`Trying Hebrew year: ${targetYear}`);
           
-          if (gregorianDate >= now) {
-            const daysUntil = Math.ceil((gregorianDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+          try {
+            const yahrzeitDate = new HDate(hebrewDay, hebrewMonth, targetYear);
+            const gregorianDate = yahrzeitDate.greg();
             
-            upcomingYahrzeits.push({
-              ...entry,
-              yahrzeit_date: gregorianDate.toISOString().split('T')[0],
-              hebrew_yahrzeit_date: yahrzeitDate.toString(),
-              days_until: daysUntil,
-              is_soon: daysUntil <= entry.notify_days_before
-            });
-            break;
+            console.log(`Yahrzeit date: ${yahrzeitDate.toString()}, Gregorian: ${gregorianDate.toDateString()}`);
+            
+            if (gregorianDate >= now) {
+              const daysUntil = Math.ceil((gregorianDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+              
+              console.log(`Found upcoming yahrzeit in ${daysUntil} days`);
+              
+              upcomingYahrzeits.push({
+                ...entry,
+                yahrzeit_date: gregorianDate.toISOString().split('T')[0],
+                hebrew_yahrzeit_date: yahrzeitDate.toString(),
+                days_until: daysUntil,
+                is_soon: daysUntil <= entry.notify_days_before
+              });
+              break;
+            }
+          } catch (hebrewDateError) {
+            console.error(`Error creating Hebrew date for year ${targetYear}:`, hebrewDateError);
           }
         }
       } catch (error) {
@@ -88,6 +102,7 @@ router.post('/', async (req, res) => {
     const gregorianDate = new Date(death_date);
     const hebrewDate = new HDate(gregorianDate);
     const hebrew_death_date = `${hebrewDate.getDate()}/${hebrewDate.getMonth()}/${hebrewDate.getFullYear()}`;
+    console.log(`Converted ${death_date} to Hebrew: ${hebrew_death_date}`);
     
     const result = await db
       .insertInto('yahrzeit_entries')
@@ -127,6 +142,7 @@ router.put('/:id', async (req, res) => {
       const gregorianDate = new Date(death_date);
       const hebrewDate = new HDate(gregorianDate);
       hebrew_death_date = `${hebrewDate.getDate()}/${hebrewDate.getMonth()}/${hebrewDate.getFullYear()}`;
+      console.log(`Converted ${death_date} to Hebrew: ${hebrew_death_date}`);
     }
     
     const updateData: any = {
