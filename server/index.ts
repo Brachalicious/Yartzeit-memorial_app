@@ -7,7 +7,11 @@ import lettersRoutes from './routes/letters.js';
 import learningRoutes from './routes/learning.js';
 import tehillimRoutes from './routes/tehillim.js';
 
+// Load environment variables first
 dotenv.config();
+
+// Import database connection to ensure initialization
+import './database/connection.js';
 
 const app = express();
 
@@ -66,6 +70,8 @@ export async function startServer(port) {
       console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
       console.log(`💾 Database directory: ${process.env.DATA_DIRECTORY || './data'}`);
       console.log(`🕯️  In memory of Chaya Sara Leah Bas Uri`);
+      console.log(`🌐 Frontend available at: http://localhost:3000`);
+      console.log(`🔌 API available at: http://localhost:${port}/api/health`);
     });
 
     // Graceful shutdown

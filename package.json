@@ -7,7 +7,9 @@
     "build": "vite build && tsc --project tsconfig.server.json",
     "start": "tsx scripts/dev.ts",
     "dev": "tsx scripts/dev.ts",
-    "preview": "vite preview --port 3000 --host"
+    "preview": "vite preview --port 3000 --host",
+    "cleanup": "tsx scripts/cleanup.ts",
+    "clean": "tsx scripts/cleanup.ts"
   },
   "dependencies": {
     "@hebcal/hdate": "^0.14.2",
