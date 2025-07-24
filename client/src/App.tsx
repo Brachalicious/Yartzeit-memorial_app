@@ -1,14 +1,23 @@
 import * as React from 'react';
-import { Button } from '@/components/ui/button';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { YahrzeitPage } from '@/pages/YahrzeitPage';
+import { ManageEntriesPage } from '@/pages/ManageEntriesPage';
+import { Navigation } from '@/components/Navigation';
 
-// Extract the error message
 function App() {
   return (
-    <div className="min-h-screen">
-      <div className="container mx-auto px-4 py-8">
-        <h1 className="text-4xl font-bold">Instance starter</h1>
+    <Router>
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        <main className="container mx-auto px-4 py-8">
+          <Routes>
+            <Route path="/" element={<Navigate to="/yahrzeit" replace />} />
+            <Route path="/yahrzeit" element={<YahrzeitPage />} />
+            <Route path="/manage" element={<ManageEntriesPage />} />
+          </Routes>
+        </main>
       </div>
-    </div>
+    </Router>
   );
 }
 
