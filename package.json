@@ -1,11 +1,13 @@
 {
-  "name": "mimo-magic-starter",
+  "name": "yahrzeit-tracker",
   "private": true,
   "version": "0.1.0",
   "type": "module",
   "scripts": {
     "build": "vite build && tsc --project tsconfig.server.json",
-    "start": "tsx watch scripts/dev.ts"
+    "start": "tsx scripts/dev.ts",
+    "dev": "tsx scripts/dev.ts",
+    "preview": "vite preview --port 3000 --host"
   },
   "dependencies": {
     "@hebcal/hdate": "^0.14.2",

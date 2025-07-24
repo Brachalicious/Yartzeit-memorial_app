@@ -29,7 +29,13 @@ app.use((req, res, next) => {
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  res.json({ 
+    status: 'ok', 
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development',
+    message: 'Yahrzeit Tracker API is running'
+  });
+  return;
 });
 
 // API routes
@@ -45,6 +51,7 @@ app.use((err, req, res, next) => {
     error: 'Internal server error',
     message: process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong'
   });
+  return;
 });
 
 // Export a function to start the server
@@ -55,9 +62,10 @@ export async function startServer(port) {
     }
     
     const server = app.listen(port, '0.0.0.0', () => {
-      console.log(`API Server running on port ${port}`);
-      console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-      console.log(`Database directory: ${process.env.DATA_DIRECTORY || './data'}`);
+      console.log(`🚀 Yahrzeit Tracker API Server running on port ${port}`);
+      console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
+      console.log(`💾 Database directory: ${process.env.DATA_DIRECTORY || './data'}`);
+      console.log(`🕯️  In memory of Chaya Sara Leah Bas Uri`);
     });
 
     // Graceful shutdown
@@ -86,6 +94,6 @@ export async function startServer(port) {
 
 // Start the server directly if this is the main module
 if (import.meta.url === `file://${process.argv[1]}`) {
-  console.log('Starting server...');
+  console.log('Starting Yahrzeit Tracker server...');
   startServer(process.env.PORT || 3001);
 }
