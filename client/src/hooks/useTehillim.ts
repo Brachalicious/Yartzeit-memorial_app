@@ -7,13 +7,44 @@ export function useTehillim() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const fetchWithRetry = async (url: string, options?: RequestInit) => {
+    let attempt = 0;
+    const maxAttempts = 3;
+    
+    while (attempt < maxAttempts) {
+      try {
+        const response = await fetch(url, {
+          ...options,
+          headers: {
+            'Content-Type': 'application/json',
+            ...options?.headers,
+          },
+        });
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`Server error: ${response.status} - ${errorText}`);
+        }
+        
+        return response;
+      } catch (networkError) {
+        attempt++;
+        console.warn(`Network attempt ${attempt} failed for ${url}:`, networkError);
+        if (attempt >= maxAttempts) {
+          throw new Error('Network connection failed. Please check your internet connection and try again.');
+        }
+        // Wait before retrying
+        await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+      }
+    }
+    
+    throw new Error('Maximum retry attempts reached');
+  };
+
   const fetchChapters = async () => {
     try {
       console.log('Fetching Tehillim chapters...');
-      const response = await fetch('/api/tehillim');
-      if (!response.ok) {
-        throw new Error('Failed to fetch Tehillim chapters');
-      }
+      const response = await fetchWithRetry('/api/tehillim');
       const data = await response.json();
       console.log('Fetched chapters:', data);
       setChapters(data);
@@ -26,10 +57,7 @@ export function useTehillim() {
   const fetchProgress = async () => {
     try {
       console.log('Fetching Tehillim progress...');
-      const response = await fetch('/api/tehillim/progress');
-      if (!response.ok) {
-        throw new Error('Failed to fetch Tehillim progress');
-      }
+      const response = await fetchWithRetry('/api/tehillim/progress');
       const data = await response.json();
       console.log('Fetched progress:', data);
       setProgress(data);
@@ -42,17 +70,10 @@ export function useTehillim() {
   const createChapter = async (formData: TehillimChapterFormData) => {
     try {
       console.log('Creating Tehillim chapter:', formData);
-      const response = await fetch('/api/tehillim', {
+      const response = await fetchWithRetry('/api/tehillim', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify(formData),
       });
-      
-      if (!response.ok) {
-        throw new Error('Failed to save Tehillim chapter');
-      }
       
       await fetchChapters();
       await fetchProgress();
@@ -67,13 +88,9 @@ export function useTehillim() {
   const deleteChapter = async (id: number) => {
     try {
       console.log('Deleting Tehillim chapter:', id);
-      const response = await fetch(`/api/tehillim/${id}`, {
+      const response = await fetchWithRetry(`/api/tehillim/${id}`, {
         method: 'DELETE',
       });
-      
-      if (!response.ok) {
-        throw new Error('Failed to delete Tehillim chapter');
-      }
       
       await fetchChapters();
       await fetchProgress();
@@ -88,6 +105,7 @@ export function useTehillim() {
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
+      setError(null);
       await Promise.all([fetchChapters(), fetchProgress()]);
       setLoading(false);
     };

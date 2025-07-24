@@ -6,13 +6,44 @@ export function useLearning() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const fetchWithRetry = async (url: string, options?: RequestInit) => {
+    let attempt = 0;
+    const maxAttempts = 3;
+    
+    while (attempt < maxAttempts) {
+      try {
+        const response = await fetch(url, {
+          ...options,
+          headers: {
+            'Content-Type': 'application/json',
+            ...options?.headers,
+          },
+        });
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`Server error: ${response.status} - ${errorText}`);
+        }
+        
+        return response;
+      } catch (networkError) {
+        attempt++;
+        console.warn(`Network attempt ${attempt} failed for ${url}:`, networkError);
+        if (attempt >= maxAttempts) {
+          throw new Error('Network connection failed. Please check your internet connection and try again.');
+        }
+        // Wait before retrying
+        await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+      }
+    }
+    
+    throw new Error('Maximum retry attempts reached');
+  };
+
   const fetchActivities = async () => {
     try {
       console.log('Fetching learning activities...');
-      const response = await fetch('/api/learning');
-      if (!response.ok) {
-        throw new Error('Failed to fetch learning activities');
-      }
+      const response = await fetchWithRetry('/api/learning');
       const data = await response.json();
       console.log('Fetched activities:', data);
       setActivities(data);
@@ -25,17 +56,10 @@ export function useLearning() {
   const createActivity = async (formData: LearningActivityFormData) => {
     try {
       console.log('Creating learning activity:', formData);
-      const response = await fetch('/api/learning', {
+      const response = await fetchWithRetry('/api/learning', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify(formData),
       });
-      
-      if (!response.ok) {
-        throw new Error('Failed to save learning activity');
-      }
       
       await fetchActivities();
       console.log('Activity saved successfully');
@@ -49,13 +73,9 @@ export function useLearning() {
   const deleteActivity = async (id: number) => {
     try {
       console.log('Deleting learning activity:', id);
-      const response = await fetch(`/api/learning/${id}`, {
+      const response = await fetchWithRetry(`/api/learning/${id}`, {
         method: 'DELETE',
       });
-      
-      if (!response.ok) {
-        throw new Error('Failed to delete learning activity');
-      }
       
       await fetchActivities();
       console.log('Activity deleted successfully');
@@ -69,6 +89,7 @@ export function useLearning() {
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
+      setError(null);
       await fetchActivities();
       setLoading(false);
     };

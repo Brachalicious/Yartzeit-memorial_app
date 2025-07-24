@@ -17,7 +17,10 @@ router.get('/', async (req, res) => {
     res.json(letters);
   } catch (error) {
     console.error('Error fetching letters:', error);
-    res.status(500).json({ error: 'Failed to fetch letters' });
+    res.status(500).json({ 
+      error: 'Failed to fetch letters', 
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
   }
 });
 
@@ -46,7 +49,10 @@ router.post('/', async (req, res) => {
     res.status(201).json({ id: result.id, message: 'Letter saved successfully' });
   } catch (error) {
     console.error('Error creating letter:', error);
-    res.status(500).json({ error: 'Failed to save letter' });
+    res.status(500).json({ 
+      error: 'Failed to save letter',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
   }
 });
 
@@ -54,19 +60,33 @@ router.post('/', async (req, res) => {
 router.delete('/:id', async (req, res) => {
   try {
     const { id } = req.params;
+    const numericId = parseInt(id);
     
-    console.log('Deleting letter:', id);
+    if (isNaN(numericId)) {
+      res.status(400).json({ error: 'Invalid letter ID' });
+      return;
+    }
     
-    await db
+    console.log('Deleting letter:', numericId);
+    
+    const result = await db
       .deleteFrom('letters')
-      .where('id', '=', parseInt(id))
-      .execute();
+      .where('id', '=', numericId)
+      .executeTakeFirst();
     
-    console.log('Deleted letter:', id);
+    if (result.numDeletedRows === 0) {
+      res.status(404).json({ error: 'Letter not found' });
+      return;
+    }
+    
+    console.log('Deleted letter:', numericId);
     res.json({ message: 'Letter deleted successfully' });
   } catch (error) {
     console.error('Error deleting letter:', error);
-    res.status(500).json({ error: 'Failed to delete letter' });
+    res.status(500).json({ 
+      error: 'Failed to delete letter',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
   }
 });
 

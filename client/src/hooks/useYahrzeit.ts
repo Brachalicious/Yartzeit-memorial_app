@@ -7,13 +7,44 @@ export function useYahrzeit() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const fetchWithRetry = async (url: string, options?: RequestInit) => {
+    let attempt = 0;
+    const maxAttempts = 3;
+    
+    while (attempt < maxAttempts) {
+      try {
+        const response = await fetch(url, {
+          ...options,
+          headers: {
+            'Content-Type': 'application/json',
+            ...options?.headers,
+          },
+        });
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`Server error: ${response.status} - ${errorText}`);
+        }
+        
+        return response;
+      } catch (networkError) {
+        attempt++;
+        console.warn(`Network attempt ${attempt} failed for ${url}:`, networkError);
+        if (attempt >= maxAttempts) {
+          throw new Error('Network connection failed. Please check your internet connection and try again.');
+        }
+        // Wait before retrying
+        await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+      }
+    }
+    
+    throw new Error('Maximum retry attempts reached');
+  };
+
   const fetchEntries = async () => {
     try {
       console.log('Fetching yahrzeit entries...');
-      const response = await fetch('/api/yahrzeit');
-      if (!response.ok) {
-        throw new Error('Failed to fetch yahrzeit entries');
-      }
+      const response = await fetchWithRetry('/api/yahrzeit');
       const data = await response.json();
       console.log('Fetched entries:', data);
       setEntries(data);
@@ -26,10 +57,7 @@ export function useYahrzeit() {
   const fetchUpcomingYahrzeits = async () => {
     try {
       console.log('Fetching upcoming yahrzeits...');
-      const response = await fetch('/api/yahrzeit/upcoming');
-      if (!response.ok) {
-        throw new Error('Failed to fetch upcoming yahrzeits');
-      }
+      const response = await fetchWithRetry('/api/yahrzeit/upcoming');
       const data = await response.json();
       console.log('Fetched upcoming yahrzeits:', data);
       setUpcomingYahrzeits(data);
@@ -42,17 +70,10 @@ export function useYahrzeit() {
   const createEntry = async (formData: YahrzeitFormData) => {
     try {
       console.log('Creating yahrzeit entry:', formData);
-      const response = await fetch('/api/yahrzeit', {
+      const response = await fetchWithRetry('/api/yahrzeit', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify(formData),
       });
-      
-      if (!response.ok) {
-        throw new Error('Failed to create yahrzeit entry');
-      }
       
       await fetchEntries();
       await fetchUpcomingYahrzeits();
@@ -67,17 +88,10 @@ export function useYahrzeit() {
   const updateEntry = async (id: number, formData: Partial<YahrzeitFormData>) => {
     try {
       console.log('Updating yahrzeit entry:', id, formData);
-      const response = await fetch(`/api/yahrzeit/${id}`, {
+      const response = await fetchWithRetry(`/api/yahrzeit/${id}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify(formData),
       });
-      
-      if (!response.ok) {
-        throw new Error('Failed to update yahrzeit entry');
-      }
       
       await fetchEntries();
       await fetchUpcomingYahrzeits();
@@ -92,13 +106,9 @@ export function useYahrzeit() {
   const deleteEntry = async (id: number) => {
     try {
       console.log('Deleting yahrzeit entry:', id);
-      const response = await fetch(`/api/yahrzeit/${id}`, {
+      const response = await fetchWithRetry(`/api/yahrzeit/${id}`, {
         method: 'DELETE',
       });
-      
-      if (!response.ok) {
-        throw new Error('Failed to delete yahrzeit entry');
-      }
       
       await fetchEntries();
       await fetchUpcomingYahrzeits();
@@ -113,6 +123,7 @@ export function useYahrzeit() {
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
+      setError(null);
       await Promise.all([fetchEntries(), fetchUpcomingYahrzeits()]);
       setLoading(false);
     };
