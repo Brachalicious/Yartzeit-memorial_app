@@ -2,6 +2,7 @@ import * as React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { YahrzeitPage } from '@/pages/YahrzeitPage';
 import { ManageEntriesPage } from '@/pages/ManageEntriesPage';
+import { LettersPage } from '@/pages/LettersPage';
 import { Navigation } from '@/components/Navigation';
 
 function App() {
@@ -14,6 +15,7 @@ function App() {
             <Route path="/" element={<Navigate to="/yahrzeit" replace />} />
             <Route path="/yahrzeit" element={<YahrzeitPage />} />
             <Route path="/manage" element={<ManageEntriesPage />} />
+            <Route path="/letters" element={<LettersPage />} />
           </Routes>
         </main>
       </div>
