@@ -4,8 +4,13 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Heart, Check } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Heart, Check, BookOpen } from 'lucide-react';
 import { LearningActivityFormData } from '@/types/learning';
+import { TehillimChapterForm } from '@/components/tehillim/TehillimChapterForm';
+import { TehillimProgress } from '@/components/tehillim/TehillimProgress';
+import { TehillimHistory } from '@/components/tehillim/TehillimHistory';
+import { useTehillim } from '@/hooks/useTehillim';
 
 interface TehillimSectionProps {
   onComplete: (data: LearningActivityFormData) => Promise<void>;
@@ -27,6 +32,9 @@ export function TehillimSection({ onComplete }: TehillimSectionProps) {
   const [customChapters, setCustomChapters] = React.useState('');
   const [notes, setNotes] = React.useState('');
   const [isCompleting, setIsCompleting] = React.useState(false);
+  const [activeTab, setActiveTab] = React.useState<'quick' | 'individual' | 'progress' | 'history'>('quick');
+
+  const { chapters, progress, loading, error, createChapter, deleteChapter } = useTehillim();
 
   const handleComplete = async () => {
     if (!selectedOption) return;
@@ -62,82 +70,151 @@ export function TehillimSection({ onComplete }: TehillimSectionProps) {
     }
   };
 
+  if (loading) {
+    return (
+      <Card>
+        <CardContent className="p-6 text-center">
+          Loading Tehillim data...
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card>
+        <CardContent className="p-6 text-center text-red-600">
+          Error: {error}
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Heart className="h-5 w-5 text-red-500" />
-            Say Tehillim in Memory
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="tehillim-option">Choose Tehillim to recite:</Label>
-            <Select value={selectedOption} onValueChange={setSelectedOption}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select a Tehillim option" />
-              </SelectTrigger>
-              <SelectContent>
-                {TEHILLIM_OPTIONS.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    <div>
-                      <div className="font-medium">{option.title}</div>
-                      <div className="text-xs text-muted-foreground">{option.description}</div>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+      <div className="flex flex-wrap gap-2 justify-center">
+        <Button
+          variant={activeTab === 'quick' ? 'default' : 'outline'}
+          onClick={() => setActiveTab('quick')}
+          size="sm"
+        >
+          Quick Selections
+        </Button>
+        <Button
+          variant={activeTab === 'individual' ? 'default' : 'outline'}
+          onClick={() => setActiveTab('individual')}
+          size="sm"
+        >
+          Individual Chapters
+        </Button>
+        <Button
+          variant={activeTab === 'progress' ? 'default' : 'outline'}
+          onClick={() => setActiveTab('progress')}
+          size="sm"
+        >
+          Progress Tracker
+        </Button>
+        <Button
+          variant={activeTab === 'history' ? 'default' : 'outline'}
+          onClick={() => setActiveTab('history')}
+          size="sm"
+        >
+          Chapter History
+        </Button>
+      </div>
 
-          {selectedOption === 'custom' && (
-            <div className="space-y-2">
-              <Label htmlFor="custom-chapters">Specify chapters (e.g., "1, 3, 23, 121"):</Label>
-              <input
-                id="custom-chapters"
-                type="text"
-                value={customChapters}
-                onChange={(e) => setCustomChapters(e.target.value)}
-                placeholder="Enter chapter numbers separated by commas"
-                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-              />
-            </div>
-          )}
+      {activeTab === 'quick' && (
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Heart className="h-5 w-5 text-red-500" />
+                Say Tehillim in Memory
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="tehillim-option">Choose Tehillim to recite:</Label>
+                <Select value={selectedOption} onValueChange={setSelectedOption}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a Tehillim option" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {TEHILLIM_OPTIONS.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        <div>
+                          <div className="font-medium">{option.title}</div>
+                          <div className="text-xs text-muted-foreground">{option.description}</div>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="tehillim-notes">Personal notes or intentions (optional):</Label>
-            <Textarea
-              id="tehillim-notes"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="Share any special intentions or thoughts..."
-              rows={3}
-            />
-          </div>
+              {selectedOption === 'custom' && (
+                <div className="space-y-2">
+                  <Label htmlFor="custom-chapters">Specify chapters (e.g., "1, 3, 23, 121"):</Label>
+                  <Input
+                    id="custom-chapters"
+                    type="text"
+                    value={customChapters}
+                    onChange={(e) => setCustomChapters(e.target.value)}
+                    placeholder="Enter chapter numbers separated by commas"
+                  />
+                </div>
+              )}
 
-          <Button 
-            onClick={handleComplete}
-            disabled={!selectedOption || isCompleting || (selectedOption === 'custom' && !customChapters.trim())}
-            className="w-full flex items-center gap-2"
-          >
-            <Check className="h-4 w-4" />
-            {isCompleting ? 'Recording...' : 'I Have Completed This Tehillim'}
-          </Button>
-        </CardContent>
-      </Card>
+              <div className="space-y-2">
+                <Label htmlFor="tehillim-notes">Personal notes or intentions (optional):</Label>
+                <Textarea
+                  id="tehillim-notes"
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder="Share any special intentions or thoughts..."
+                  rows={3}
+                />
+              </div>
 
-      <Card className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20">
-        <CardContent className="p-6">
-          <h3 className="font-semibold mb-3">The Power of Tehillim</h3>
-          <p className="text-sm text-muted-foreground leading-relaxed">
-            Reciting Tehillim (Psalms) creates a spiritual connection that transcends this world. 
-            Each word carries the power to elevate the soul of our departed loved ones. When we say 
-            Tehillim with intention and love, we are sending our prayers directly to the throne of 
-            the Almighty, asking for the soul's elevation and peace in the World to Come.
-          </p>
-        </CardContent>
-      </Card>
+              <Button 
+                onClick={handleComplete}
+                disabled={!selectedOption || isCompleting || (selectedOption === 'custom' && !customChapters.trim())}
+                className="w-full flex items-center gap-2"
+              >
+                <Check className="h-4 w-4" />
+                {isCompleting ? 'Recording...' : 'I Have Completed This Tehillim'}
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20">
+            <CardContent className="p-6">
+              <h3 className="font-semibold mb-3">The Power of Tehillim</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Reciting Tehillim (Psalms) creates a spiritual connection that transcends this world. 
+                Each word carries the power to elevate the soul of our departed loved ones. When we say 
+                Tehillim with intention and love, we are sending our prayers directly to the throne of 
+                the Almighty, asking for the soul's elevation and peace in the World to Come.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {activeTab === 'individual' && (
+        <TehillimChapterForm 
+          onComplete={createChapter}
+          remainingChapters={progress?.remaining_chapters}
+        />
+      )}
+
+      {activeTab === 'progress' && progress && (
+        <TehillimProgress progress={progress} />
+      )}
+
+      {activeTab === 'history' && (
+        <TehillimHistory chapters={chapters} onDelete={deleteChapter} />
+      )}
     </div>
   );
 }

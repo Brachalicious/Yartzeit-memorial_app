@@ -27,8 +27,18 @@ export interface LearningActivity {
   created_at: string;
 }
 
+export interface TehillimChapter {
+  id: number;
+  chapter_number: number;
+  chapter_name: string | null;
+  date_completed: string;
+  notes: string | null;
+  created_at: string;
+}
+
 export interface DatabaseSchema {
   yahrzeit_entries: YahrzeitEntry;
   letters: Letter;
   learning_activities: LearningActivity;
+  tehillim_chapters: TehillimChapter;
 }

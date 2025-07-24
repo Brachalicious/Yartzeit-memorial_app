@@ -4,6 +4,7 @@ import { setupStaticServing } from './static-serve.js';
 import yahrzeitRoutes from './routes/yahrzeit.js';
 import lettersRoutes from './routes/letters.js';
 import learningRoutes from './routes/learning.js';
+import tehillimRoutes from './routes/tehillim.js';
 
 dotenv.config();
 
@@ -17,6 +18,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/api/yahrzeit', yahrzeitRoutes);
 app.use('/api/letters', lettersRoutes);
 app.use('/api/learning', learningRoutes);
+app.use('/api/tehillim', tehillimRoutes);
 
 // Export a function to start the server
 export async function startServer(port) {
