@@ -4,6 +4,7 @@ import path from 'path';
 
 export default defineConfig(({ mode }) => {
   const apiPort = process.env.VITE_API_PORT || '3001';
+  const isDev = mode === 'development';
   
   return {
     plugins: [react()],
@@ -16,23 +17,39 @@ export default defineConfig(({ mode }) => {
     build: {
       outDir: path.join(process.cwd(), 'dist/public'),
       emptyOutDir: true,
-      sourcemap: mode === 'development',
+      sourcemap: isDev,
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            vendor: ['react', 'react-dom'],
+            router: ['react-router-dom'],
+          }
+        }
+      }
     },
     server: {
       port: 3000,
       host: '0.0.0.0',
-      strictPort: false, // Allow Vite to use alternative ports
+      strictPort: false,
       cors: true,
       proxy: {
         '/api': {
           target: `http://localhost:${apiPort}`,
           changeOrigin: true,
           secure: false,
+          configure: (proxy, options) => {
+            proxy.on('error', (err, req, res) => {
+              console.log('Proxy error:', err);
+            });
+            proxy.on('proxyReq', (proxyReq, req, res) => {
+              console.log('Proxying request:', req.method, req.url);
+            });
+          }
         },
       },
     },
     css: {
-      devSourcemap: mode === 'development',
+      devSourcemap: isDev,
     },
     optimizeDeps: {
       include: [
@@ -40,10 +57,12 @@ export default defineConfig(({ mode }) => {
         'react-dom',
         'react-router-dom',
         'lucide-react',
-        '@radix-ui/react-dialog',
-        '@radix-ui/react-select'
       ],
+      exclude: ['@radix-ui/react-dialog', '@radix-ui/react-select']
     },
-    clearScreen: false, // Don't clear terminal on restart
+    clearScreen: false,
+    define: {
+      'process.env.NODE_ENV': JSON.stringify(mode),
+    }
   };
 });

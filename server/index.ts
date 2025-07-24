@@ -10,8 +10,7 @@ import tehillimRoutes from './routes/tehillim.js';
 // Load environment variables first
 dotenv.config();
 
-// Import database connection to ensure initialization
-import './database/connection.js';
+console.log('🔧 Initializing Yahrzeit Tracker server...');
 
 const app = express();
 
@@ -37,16 +36,42 @@ app.get('/api/health', (req, res) => {
     status: 'ok', 
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'development',
-    message: 'Yahrzeit Tracker API is running'
+    message: 'Yahrzeit Tracker API is running',
+    dedication: 'ליועלי נשמת חיה שרה לאה בת אורי (In memory of Chaya Sara Leah Bas Uri)'
   });
   return;
 });
 
-// API routes
-app.use('/api/yahrzeit', yahrzeitRoutes);
-app.use('/api/letters', lettersRoutes);
-app.use('/api/learning', learningRoutes);
-app.use('/api/tehillim', tehillimRoutes);
+// Import database connection after initial setup
+let dbConnectionReady = false;
+try {
+  console.log('🔧 Loading database connection...');
+  await import('./database/connection.js');
+  dbConnectionReady = true;
+  console.log('✅ Database connection ready');
+} catch (error) {
+  console.error('❌ Database connection failed:', error);
+  console.error('The server will start but API endpoints may not work properly');
+}
+
+// API routes - only add if database is ready
+if (dbConnectionReady) {
+  console.log('🔧 Setting up API routes...');
+  app.use('/api/yahrzeit', yahrzeitRoutes);
+  app.use('/api/letters', lettersRoutes);
+  app.use('/api/learning', learningRoutes);
+  app.use('/api/tehillim', tehillimRoutes);
+  console.log('✅ API routes configured');
+} else {
+  // Fallback routes when database is not ready
+  app.use('/api/*', (req, res) => {
+    res.status(503).json({
+      error: 'Database not available',
+      message: 'The database connection is not ready. Please try again later.'
+    });
+    return;
+  });
+}
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -66,30 +91,27 @@ export async function startServer(port) {
     }
     
     const server = app.listen(port, '0.0.0.0', () => {
-      console.log(`🚀 Yahrzeit Tracker API Server running on port ${port}`);
+      console.log('');
+      console.log('🚀 Yahrzeit Tracker API Server running successfully!');
       console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
-      console.log(`💾 Database directory: ${process.env.DATA_DIRECTORY || './data'}`);
-      console.log(`🕯️  In memory of Chaya Sara Leah Bas Uri`);
-      console.log(`🌐 Frontend available at: http://localhost:3000`);
-      console.log(`🔌 API available at: http://localhost:${port}/api/health`);
+      console.log(`🌐 Server: http://localhost:${port}`);
+      console.log(`💾 Database: ${dbConnectionReady ? 'Connected' : 'Not available'}`);
+      console.log(`🔌 API Health: http://localhost:${port}/api/health`);
+      console.log('🕯️  In memory of Chaya Sara Leah Bas Uri (ליועלי נשמת חיה שרה לאה בת אורי)');
+      console.log('');
     });
 
     // Graceful shutdown
-    process.on('SIGTERM', () => {
-      console.log('SIGTERM received, shutting down gracefully');
+    const shutdown = (signal) => {
+      console.log(`${signal} received, shutting down gracefully`);
       server.close(() => {
         console.log('Server closed');
         process.exit(0);
       });
-    });
+    };
 
-    process.on('SIGINT', () => {
-      console.log('SIGINT received, shutting down gracefully');
-      server.close(() => {
-        console.log('Server closed');
-        process.exit(0);
-      });
-    });
+    process.on('SIGTERM', () => shutdown('SIGTERM'));
+    process.on('SIGINT', () => shutdown('SIGINT'));
 
     return server;
   } catch (err) {

@@ -9,6 +9,8 @@ import { DatabaseSchema } from './schema.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
+console.log('🔧 Initializing database connection...');
+
 const dataDirectory = process.env.DATA_DIRECTORY || path.join(__dirname, '../../data');
 const dbPath = path.join(dataDirectory, 'database.sqlite');
 
@@ -23,13 +25,14 @@ try {
   }
 } catch (error) {
   console.error('Error creating data directory:', error);
+  throw error;
 }
 
 // Initialize SQLite database
 let sqliteDb;
 try {
   sqliteDb = new Database(dbPath);
-  console.log('Database connection established successfully');
+  console.log('✅ SQLite database file connected');
   
   // Enable WAL mode for better concurrency
   sqliteDb.pragma('journal_mode = WAL');
@@ -38,19 +41,16 @@ try {
   sqliteDb.pragma('temp_store = memory');
   sqliteDb.pragma('foreign_keys = ON');
   
-  console.log('Database pragmas configured');
-  
-  // Initialize tables if they don't exist
-  initializeTables(sqliteDb);
+  console.log('✅ Database pragmas configured');
   
 } catch (error) {
-  console.error('Failed to initialize database:', error);
-  process.exit(1);
+  console.error('❌ Failed to initialize SQLite database:', error);
+  throw error;
 }
 
 function initializeTables(db) {
   try {
-    console.log('Initializing database tables...');
+    console.log('🔧 Initializing database tables...');
     
     // Create yahrzeit_entries table
     db.exec(`
@@ -112,33 +112,48 @@ function initializeTables(db) {
       CREATE INDEX IF NOT EXISTS idx_tehillim_chapters_number ON tehillim_chapters(chapter_number);
     `);
 
+    console.log('✅ Database tables and indexes created');
+
     // Insert sample data for Chaya Sara Leah if not exists
     const existingEntry = db.prepare('SELECT id FROM yahrzeit_entries WHERE name = ?').get('Chaya Sara Leah Bas Uri');
     if (!existingEntry) {
-      db.prepare(`
-        INSERT INTO yahrzeit_entries (
-          name, hebrew_name, death_date, hebrew_death_date, relationship, notes, notify_days_before
-        ) VALUES (?, ?, ?, ?, ?, ?, ?)
-      `).run(
-        'Chaya Sara Leah Bas Uri',
-        'חיה שרה לאה בת אורי',
-        '2024-11-23',
-        '22/3/5785',
-        'Beloved Mother',
-        'A special soul who brought light to everyone she met. May her memory be a blessing.',
-        7
-      );
-      console.log('Added sample yahrzeit entry for Chaya Sara Leah');
+      try {
+        db.prepare(`
+          INSERT INTO yahrzeit_entries (
+            name, hebrew_name, death_date, hebrew_death_date, relationship, notes, notify_days_before
+          ) VALUES (?, ?, ?, ?, ?, ?, ?)
+        `).run(
+          'Chaya Sara Leah Bas Uri',
+          'חיה שרה לאה בת אורי',
+          '2024-11-23',
+          '22/3/5785',
+          'Beloved Mother',
+          'A special soul who brought light to everyone she met. May her memory be a blessing.',
+          7
+        );
+        console.log('✅ Added sample yahrzeit entry for Chaya Sara Leah');
+      } catch (error) {
+        console.log('Note: Could not add sample entry (may already exist)');
+      }
     }
 
-    console.log('Database tables initialized successfully');
+    console.log('✅ Database initialization completed successfully');
     
   } catch (error) {
-    console.error('Error initializing database tables:', error);
+    console.error('❌ Error initializing database tables:', error);
     throw error;
   }
 }
 
+// Initialize tables
+try {
+  initializeTables(sqliteDb);
+} catch (error) {
+  console.error('❌ Failed to initialize database tables:', error);
+  throw error;
+}
+
+// Create Kysely instance
 export const db = new Kysely<DatabaseSchema>({
   dialect: new SqliteDialect({
     database: sqliteDb,
@@ -156,16 +171,18 @@ export const db = new Kysely<DatabaseSchema>({
 // Test database connection
 try {
   const result = sqliteDb.prepare('SELECT 1 as test').get();
-  console.log('Database connection test successful:', result);
+  console.log('✅ Database connection test successful:', result);
   
   // Test table existence
   const tables = sqliteDb.prepare(`
     SELECT name FROM sqlite_master 
     WHERE type='table' AND name NOT LIKE 'sqlite_%'
   `).all();
-  console.log('Available tables:', tables.map(t => t.name));
+  console.log('✅ Available tables:', tables.map(t => t.name));
   
 } catch (error) {
-  console.error('Database connection test failed:', error);
-  process.exit(1);
+  console.error('❌ Database connection test failed:', error);
+  throw error;
 }
+
+console.log('✅ Database connection module loaded successfully');

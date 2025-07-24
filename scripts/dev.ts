@@ -1,6 +1,7 @@
 import { startServer } from '../server/index.js';
 import { spawn } from 'child_process';
 import { createServer } from 'net';
+import path from 'path';
 
 let viteProcess;
 
@@ -37,15 +38,33 @@ async function findAvailablePort(startPort: number): Promise<number> {
 async function killProcessOnPort(port: number) {
   try {
     if (process.platform === 'win32') {
-      // Windows
-      spawn('taskkill', ['/F', '/IM', 'node.exe'], { stdio: 'ignore' });
+      // Windows - kill by port
+      spawn('netstat', ['-ano'], { stdio: 'pipe' }).stdout?.on('data', (data) => {
+        const lines = data.toString().split('\n');
+        lines.forEach((line: string) => {
+          if (line.includes(`:${port}`)) {
+            const parts = line.trim().split(/\s+/);
+            const pid = parts[parts.length - 1];
+            if (pid && pid !== '0') {
+              spawn('taskkill', ['/F', '/PID', pid]);
+            }
+          }
+        });
+      });
     } else {
       // Unix-like systems
-      const { spawn: spawnSync } = await import('child_process');
-      spawnSync('pkill', ['-f', `.*${port}.*`], { stdio: 'ignore' });
+      spawn('lsof', [`-ti:${port}`], { stdio: 'pipe' }).stdout?.on('data', (data) => {
+        const pids = data.toString().trim().split('\n');
+        pids.forEach((pid: string) => {
+          if (pid) {
+            spawn('kill', ['-9', pid]);
+          }
+        });
+      });
     }
   } catch (error) {
     // Ignore errors when killing processes
+    console.log('Note: Could not kill existing processes on port', port);
   }
 }
 
@@ -88,12 +107,20 @@ async function startDev() {
     console.log('');
 
     // Wait a moment for the server to fully initialize
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise(resolve => setTimeout(resolve, 1500));
 
     // Start Vite dev server
     console.log(`🔧 Starting Vite dev server on port ${frontendPort}...`);
-    viteProcess = spawn('npx', ['vite', 'dev', '--port', frontendPort.toString(), '--host'], {
-      stdio: 'inherit',
+    
+    const viteArgs = [
+      'vite', 'dev', 
+      '--port', frontendPort.toString(), 
+      '--host', '0.0.0.0',
+      '--no-open'
+    ];
+
+    viteProcess = spawn('npx', viteArgs, {
+      stdio: ['inherit', 'inherit', 'inherit'],
       shell: true,
       cwd: process.cwd(),
       env: { 
@@ -109,20 +136,26 @@ async function startDev() {
     });
 
     viteProcess.on('close', (code) => {
-      console.log(`Vite dev server exited with code ${code}`);
+      if (code !== 0 && code !== null) {
+        console.log(`Vite dev server exited with code ${code}`);
+      }
     });
 
-    console.log('');
-    console.log('🎉 Development servers started successfully!');
-    console.log('');
-    console.log(`📱 Frontend: http://localhost:${frontendPort}`);
-    console.log(`🔌 Backend API: http://localhost:${apiPort}`);
-    console.log(`💊 Health Check: http://localhost:${apiPort}/api/health`);
-    console.log('');
-    console.log('🕯️  Memorial Application for Chaya Sara Leah Bas Uri');
-    console.log('   Features: Yahrzeit tracking, Memorial candle, Letters to heaven');
-    console.log('   Torah learning, Tehillim dedication, Comfort chat');
-    console.log('');
+    viteProcess.on('spawn', () => {
+      console.log('✅ Vite dev server started successfully');
+      console.log('');
+      console.log('🎉 Development servers are running!');
+      console.log('');
+      console.log(`📱 Frontend: http://localhost:${frontendPort}`);
+      console.log(`🔌 Backend API: http://localhost:${apiPort}`);
+      console.log(`💊 Health Check: http://localhost:${apiPort}/api/health`);
+      console.log('');
+      console.log('🕯️  Memorial Application for Chaya Sara Leah Bas Uri');
+      console.log('   Features: Yahrzeit tracking, Memorial candle, Letters to heaven');
+      console.log('   Torah learning, Tehillim dedication, Comfort chat');
+      console.log('');
+      console.log('Press Ctrl+C to stop both servers');
+    });
 
   } catch (error) {
     console.error('❌ Failed to start development servers:', error);
