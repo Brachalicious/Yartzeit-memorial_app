@@ -4,6 +4,7 @@ import { YahrzeitPage } from '@/pages/YahrzeitPage';
 import { ManageEntriesPage } from '@/pages/ManageEntriesPage';
 import { LettersPage } from '@/pages/LettersPage';
 import { CandlePage } from '@/pages/CandlePage';
+import { ChatPage } from '@/pages/ChatPage';
 import { Navigation } from '@/components/Navigation';
 
 function App() {
@@ -18,6 +19,7 @@ function App() {
             <Route path="/manage" element={<ManageEntriesPage />} />
             <Route path="/candle" element={<CandlePage />} />
             <Route path="/letters" element={<LettersPage />} />
+            <Route path="/chat" element={<ChatPage />} />
           </Routes>
         </main>
       </div>
