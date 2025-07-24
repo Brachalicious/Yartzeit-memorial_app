@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { TehillimChapterInfo, TehillimSuggestions } from '@/types/sefaria';
 
 export function useSefariaApi() {
   const [loading, setLoading] = useState(false);
@@ -39,7 +38,7 @@ export function useSefariaApi() {
     throw new Error('Maximum retry attempts reached');
   };
 
-  const getChapterInfo = async (chapterNumber: number): Promise<TehillimChapterInfo | null> => {
+  const getChapterInfo = async (chapterNumber: number) => {
     try {
       setLoading(true);
       setError(null);
@@ -60,7 +59,7 @@ export function useSefariaApi() {
     }
   };
 
-  const getSuggestions = async (): Promise<TehillimSuggestions | null> => {
+  const getSuggestions = async () => {
     try {
       setLoading(true);
       setError(null);
