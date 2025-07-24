@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { YahrzeitPage } from '@/pages/YahrzeitPage';
 import { ManageEntriesPage } from '@/pages/ManageEntriesPage';
 import { LettersPage } from '@/pages/LettersPage';
+import { CandlePage } from '@/pages/CandlePage';
 import { Navigation } from '@/components/Navigation';
 
 function App() {
@@ -15,6 +16,7 @@ function App() {
             <Route path="/" element={<Navigate to="/yahrzeit" replace />} />
             <Route path="/yahrzeit" element={<YahrzeitPage />} />
             <Route path="/manage" element={<ManageEntriesPage />} />
+            <Route path="/candle" element={<CandlePage />} />
             <Route path="/letters" element={<LettersPage />} />
           </Routes>
         </main>

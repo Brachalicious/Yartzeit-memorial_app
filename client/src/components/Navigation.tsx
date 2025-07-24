@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Calendar, Settings, Heart } from 'lucide-react';
+import { Calendar, Settings, Heart, Flame } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export function Navigation() {
@@ -34,6 +34,17 @@ export function Navigation() {
               <Link to="/manage" className="flex items-center gap-2">
                 <Settings className="h-4 w-4" />
                 Manage Entries
+              </Link>
+            </Button>
+
+            <Button
+              asChild
+              variant={location.pathname === '/candle' ? 'default' : 'ghost'}
+              size="sm"
+            >
+              <Link to="/candle" className="flex items-center gap-2">
+                <Flame className="h-4 w-4" />
+                Light Candle
               </Link>
             </Button>
 
