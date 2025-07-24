@@ -1,6 +1,10 @@
+/** @type {import('tailwindcss').Config} */
 export default {
   darkMode: ['class'],
-  content: ['./client/index.html', './client/src/**/*.{js,jsx,ts,tsx}'],
+  content: [
+    './client/index.html',
+    './client/src/**/*.{js,jsx,ts,tsx}',
+  ],
   theme: {
     extend: {
       borderRadius: {
@@ -50,7 +54,11 @@ export default {
           5: 'hsl(var(--chart-5))',
         },
       },
+      animation: {
+        'accordion-down': 'accordion-down 0.2s ease-out',
+        'accordion-up': 'accordion-up 0.2s ease-out',
+      },
     },
   },
   plugins: [require('tailwindcss-animate')],
-};
+}

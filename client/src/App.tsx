@@ -11,7 +11,7 @@ import { Navigation } from '@/components/Navigation';
 function App() {
   return (
     <Router>
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background text-foreground">
         <Navigation />
         <main className="container mx-auto px-4 py-8">
           <Routes>
