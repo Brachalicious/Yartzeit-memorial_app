@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Calendar, Settings, Heart, Flame, MessageCircle } from 'lucide-react';
+import { Calendar, Settings, Heart, Flame, MessageCircle, BookOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export function Navigation() {
@@ -56,6 +56,17 @@ export function Navigation() {
               <Link to="/letters" className="flex items-center gap-2">
                 <Heart className="h-4 w-4" />
                 Letters
+              </Link>
+            </Button>
+
+            <Button
+              asChild
+              variant={location.pathname === '/learning' ? 'default' : 'ghost'}
+              size="sm"
+            >
+              <Link to="/learning" className="flex items-center gap-2">
+                <BookOpen className="h-4 w-4" />
+                Learning
               </Link>
             </Button>
 

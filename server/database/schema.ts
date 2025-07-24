@@ -17,7 +17,18 @@ export interface Letter {
   created_at: string;
 }
 
+export interface LearningActivity {
+  id: number;
+  activity_type: 'tehillim' | 'torah';
+  title: string;
+  description: string | null;
+  date_completed: string;
+  notes: string | null;
+  created_at: string;
+}
+
 export interface DatabaseSchema {
   yahrzeit_entries: YahrzeitEntry;
   letters: Letter;
+  learning_activities: LearningActivity;
 }
