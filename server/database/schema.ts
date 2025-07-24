@@ -11,6 +11,13 @@ export interface YahrzeitEntry {
   updated_at: string;
 }
 
+export interface Letter {
+  id: number;
+  content: string;
+  created_at: string;
+}
+
 export interface DatabaseSchema {
   yahrzeit_entries: YahrzeitEntry;
+  letters: Letter;
 }

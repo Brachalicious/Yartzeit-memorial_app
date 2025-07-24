@@ -44,7 +44,7 @@ export function Navigation() {
             >
               <Link to="/letters" className="flex items-center gap-2">
                 <Heart className="h-4 w-4" />
-                Letters to Mom
+                Letters
               </Link>
             </Button>
           </div>
