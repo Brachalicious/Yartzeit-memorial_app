@@ -1,6 +1,6 @@
 import express from 'express';
 import { db } from '../database/connection.js';
-import { HDate, HebrewCalendar } from 'hebcal';
+import { HDate } from '@hebcal/hdate';
 
 const router = express.Router();
 
