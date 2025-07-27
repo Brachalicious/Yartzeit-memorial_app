@@ -9,7 +9,6 @@ import { ShmirasHalashonProgress } from './ShmirasHalashonProgress';
 import { ShmirasHalashonHistory } from './ShmirasHalashonHistory';
 import { useShmirasHalashon } from '@/hooks/useShmirasHalashon';
 import { cn } from '@/lib/utils';
-import { format } from 'date-fns';
 
 interface ShmirasHalashonSectionProps {
   onComplete?: () => void;
@@ -51,6 +50,22 @@ export function ShmirasHalashonSection({ onComplete }: ShmirasHalashonSectionPro
     } catch (error) {
       console.error('Error submitting form:', error);
     }
+  };
+
+  const formatSelectedDate = (date: Date) => {
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    });
+  };
+
+  const formatFullDate = (date: Date) => {
+    return date.toLocaleDateString('en-US', {
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric'
+    });
   };
 
   if (loading) {
@@ -115,7 +130,7 @@ export function ShmirasHalashonSection({ onComplete }: ShmirasHalashonSectionPro
                   <PopoverTrigger asChild>
                     <Button variant="outline" size="sm" className="flex items-center gap-2">
                       <CalendarIcon className="h-4 w-4" />
-                      {isToday ? 'Today' : format(selectedDate, 'MMM d, yyyy')}
+                      {isToday ? 'Today' : formatSelectedDate(selectedDate)}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="end">
@@ -142,7 +157,7 @@ export function ShmirasHalashonSection({ onComplete }: ShmirasHalashonSectionPro
                     <div className="flex items-center justify-between mb-2">
                       <h3 className="font-semibold flex items-center gap-2">
                         <Edit className="h-4 w-4" />
-                        Entry exists for {format(selectedDate, 'MMMM d, yyyy')}
+                        Entry exists for {formatFullDate(selectedDate)}
                       </h3>
                       <span className="text-sm text-green-600 font-medium">
                         Rating: {selectedEntry.overall_rating}/5
@@ -159,7 +174,7 @@ export function ShmirasHalashonSection({ onComplete }: ShmirasHalashonSectionPro
                     <div className="flex items-center gap-2 mb-2">
                       <Plus className="h-4 w-4" />
                       <h3 className="font-semibold">
-                        Add entry for {format(selectedDate, 'MMMM d, yyyy')}
+                        Add entry for {formatFullDate(selectedDate)}
                       </h3>
                     </div>
                     <p className="text-sm text-muted-foreground">
