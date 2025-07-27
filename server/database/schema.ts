@@ -36,9 +36,26 @@ export interface TehillimChapter {
   created_at: string;
 }
 
+export interface ShmirasHalashonEntry {
+  id: number;
+  date_recorded: string;
+  positive_speech_count: number;
+  avoided_lashon_hara: number;
+  gave_compliments: number;
+  spoke_words_of_torah: number;
+  helped_through_speech: number;
+  reflection_notes: string | null;
+  daily_goal: string | null;
+  challenges_faced: string | null;
+  improvements_noticed: string | null;
+  overall_rating: number;
+  created_at: string;
+}
+
 export interface DatabaseSchema {
   yahrzeit_entries: YahrzeitEntry;
   letters: Letter;
   learning_activities: LearningActivity;
   tehillim_chapters: TehillimChapter;
+  shmiras_halashon_entries: ShmirasHalashonEntry;
 }

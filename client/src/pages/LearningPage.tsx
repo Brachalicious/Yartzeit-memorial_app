@@ -1,15 +1,16 @@
 import * as React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { BookOpen, Heart, Plus } from 'lucide-react';
+import { BookOpen, Heart, Plus, MessageSquare } from 'lucide-react';
 import { TehillimSection } from '@/components/learning/TehillimSection';
 import { TorahSection } from '@/components/learning/TorahSection';
 import { LearningHistory } from '@/components/learning/LearningHistory';
+import { ShmirasHalashonSection } from '@/components/shmiras-halashon/ShmirasHalashonSection';
 import { useLearning } from '@/hooks/useLearning';
 
 export function LearningPage() {
   const { activities, loading, error, createActivity, deleteActivity } = useLearning();
-  const [activeTab, setActiveTab] = React.useState<'tehillim' | 'torah' | 'history'>('tehillim');
+  const [activeTab, setActiveTab] = React.useState<'tehillim' | 'torah' | 'shmiras-halashon' | 'history'>('tehillim');
 
   if (loading) {
     return (
@@ -42,10 +43,10 @@ export function LearningPage() {
           ליועלי נשמת חיה שרה לאה בת אורי
         </h1>
         <h2 className="text-2xl font-bold text-blue-700 dark:text-blue-300 mb-3">
-          Torah Learning & Tehillim
+          Torah Learning, Tehillim & Shmiras HaLashon
         </h2>
         <p className="text-lg text-blue-600 dark:text-blue-400 italic">
-          Dedicate your learning and prayers to elevate her holy soul
+          Dedicate your learning, prayers, and mindful speech to elevate her holy soul
         </p>
       </div>
 
@@ -68,6 +69,14 @@ export function LearningPage() {
             Learn Torah
           </Button>
           <Button
+            variant={activeTab === 'shmiras-halashon' ? 'default' : 'outline'}
+            onClick={() => setActiveTab('shmiras-halashon')}
+            className="flex items-center gap-2"
+          >
+            <MessageSquare className="h-4 w-4" />
+            Guard Speech
+          </Button>
+          <Button
             variant={activeTab === 'history' ? 'default' : 'outline'}
             onClick={() => setActiveTab('history')}
             className="flex items-center gap-2"
@@ -83,6 +92,10 @@ export function LearningPage() {
 
         {activeTab === 'torah' && (
           <TorahSection onComplete={createActivity} />
+        )}
+
+        {activeTab === 'shmiras-halashon' && (
+          <ShmirasHalashonSection />
         )}
 
         {activeTab === 'history' && (

@@ -102,6 +102,25 @@ function initializeTables(db) {
       )
     `);
 
+    // Create shmiras_halashon_entries table
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS shmiras_halashon_entries (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        date_recorded TEXT NOT NULL,
+        positive_speech_count INTEGER DEFAULT 0,
+        avoided_lashon_hara INTEGER DEFAULT 0,
+        gave_compliments INTEGER DEFAULT 0,
+        spoke_words_of_torah INTEGER DEFAULT 0,
+        helped_through_speech INTEGER DEFAULT 0,
+        reflection_notes TEXT,
+        daily_goal TEXT,
+        challenges_faced TEXT,
+        improvements_noticed TEXT,
+        overall_rating INTEGER CHECK (overall_rating >= 1 AND overall_rating <= 5),
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
     // Create indexes
     db.exec(`
       CREATE INDEX IF NOT EXISTS idx_yahrzeit_entries_name ON yahrzeit_entries(name);
@@ -110,6 +129,8 @@ function initializeTables(db) {
       CREATE INDEX IF NOT EXISTS idx_learning_activities_date ON learning_activities(date_completed);
       CREATE INDEX IF NOT EXISTS idx_tehillim_chapters_date ON tehillim_chapters(date_completed);
       CREATE INDEX IF NOT EXISTS idx_tehillim_chapters_number ON tehillim_chapters(chapter_number);
+      CREATE INDEX IF NOT EXISTS idx_shmiras_halashon_date ON shmiras_halashon_entries(date_recorded);
+      CREATE INDEX IF NOT EXISTS idx_shmiras_halashon_rating ON shmiras_halashon_entries(overall_rating);
     `);
 
     console.log('✅ Database tables and indexes created');

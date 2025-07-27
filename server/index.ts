@@ -6,6 +6,7 @@ import yahrzeitRoutes from './routes/yahrzeit.js';
 import lettersRoutes from './routes/letters.js';
 import learningRoutes from './routes/learning.js';
 import tehillimRoutes from './routes/tehillim.js';
+import shmirasHalashonRoutes from './routes/shmiras-halashon.js';
 
 // Load environment variables first
 dotenv.config();
@@ -61,6 +62,7 @@ if (dbConnectionReady) {
   app.use('/api/letters', lettersRoutes);
   app.use('/api/learning', learningRoutes);
   app.use('/api/tehillim', tehillimRoutes);
+  app.use('/api/shmiras-halashon', shmirasHalashonRoutes);
   console.log('✅ API routes configured');
 } else {
   // Fallback routes when database is not ready
