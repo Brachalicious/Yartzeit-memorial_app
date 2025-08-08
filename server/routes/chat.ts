@@ -4,7 +4,7 @@ import path from 'path';
 import fs from 'fs';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import OpenAI from 'openai';
-import { generateComfortingResponse, detectEmotion } from '../services/neshamaBot';
+import { generateComfortingResponse, detectEmotion } from '../services/neshamaBot.js';
 
 const router = express.Router();
 

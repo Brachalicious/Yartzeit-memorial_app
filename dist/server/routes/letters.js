@@ -24,7 +24,7 @@ router.get('/', async (req, res) => {
 // Create new letter
 router.post('/', async (req, res) => {
     try {
-        const { content } = req.body;
+        const { content, mailbox, recipient, sender } = req.body;
         if (!content || !content.trim()) {
             res.status(400).json({ error: 'Letter content is required' });
             return;
@@ -34,6 +34,9 @@ router.post('/', async (req, res) => {
             .insertInto('letters')
             .values({
             content: content.trim(),
+            mailbox: mailbox || null,
+            recipient: recipient || null,
+            sender: sender || null,
             created_at: new Date().toISOString()
         })
             .returning('id')

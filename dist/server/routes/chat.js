@@ -1,97 +1,217 @@
 import express from 'express';
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import OpenAI from 'openai';
+import { generateComfortingResponse, detectEmotion } from '../services/neshamaBot.js';
 const router = express.Router();
+// Configure multer for file uploads
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        const uploadDir = path.join(process.cwd(), 'uploads');
+        if (!fs.existsSync(uploadDir)) {
+            fs.mkdirSync(uploadDir, { recursive: true });
+        }
+        cb(null, uploadDir);
+    },
+    filename: (req, file, cb) => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+    }
+});
+const upload = multer({
+    storage: storage,
+    limits: { fileSize: 50 * 1024 * 1024 }, // 50MB limit
+    fileFilter: (req, file, cb) => {
+        // Allow images, videos, and audio files
+        const allowedTypes = /jpeg|jpg|png|gif|webp|mp4|mov|avi|mp3|wav|m4a|ogg/;
+        const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+        const mimetype = allowedTypes.test(file.mimetype);
+        if (mimetype && extname) {
+            return cb(null, true);
+        }
+        else {
+            cb(new Error('Only image, video, and audio files are allowed'));
+        }
+    }
+});
 // Initialize Gemini AI
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
-// Enhanced chat endpoint for comfort and grief support with Gemini AI
-router.post('/', async (req, res) => {
+// Initialize OpenAI
+const openai = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY || '',
+});
+// Helper function to convert file to base64
+async function fileToBase64(filePath) {
+    const fileBuffer = fs.readFileSync(filePath);
+    return fileBuffer.toString('base64');
+}
+// Helper function to analyze file content
+async function analyzeFile(filePath, filename) {
+    const ext = path.extname(filename).toLowerCase();
+    if (['.jpg', '.jpeg', '.png', '.gif', '.webp'].includes(ext)) {
+        return `Image file: ${filename}. This appears to be a photograph or image that may contain meaningful visual memories.`;
+    }
+    else if (['.mp4', '.mov', '.avi'].includes(ext)) {
+        return `Video file: ${filename}. This is a video recording that likely contains precious visual and audio memories.`;
+    }
+    else if (['.mp3', '.wav', '.m4a', '.ogg'].includes(ext)) {
+        return `Audio file: ${filename}. This is an audio recording that may contain voices, music, or sounds with emotional significance.`;
+    }
+    return `File: ${filename}. Uploaded content for discussion.`;
+}
+// Enhanced chat endpoint for comfort and grief support with multiple AI providers and file analysis
+router.post('/', upload.fields([
+    { name: 'files', maxCount: 10 },
+    { name: 'audio', maxCount: 1 }
+]), async (req, res) => {
+    const { message, context, relationship, aiProvider = 'gemini' } = req.body;
     try {
-        const { message, context, relationship } = req.body;
         if (!message) {
             return res.status(400).json({ error: 'Message is required' });
         }
-        // Check if API key is configured
-        if (!process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY === 'your_gemini_api_key_here') {
-            console.log('Gemini API key not configured, using fallback responses');
-            return useFallbackResponse(res);
+        // Process uploaded files
+        let fileAnalysis = '';
+        const uploadedFiles = req.files;
+        if (uploadedFiles) {
+            const analyses = [];
+            // Process regular files
+            if (uploadedFiles.files) {
+                for (const file of uploadedFiles.files) {
+                    const analysis = await analyzeFile(file.path, file.originalname);
+                    analyses.push(analysis);
+                    // For images, we can add them to OpenAI vision API later
+                    if (['.jpg', '.jpeg', '.png', '.gif', '.webp'].includes(path.extname(file.originalname).toLowerCase())) {
+                        // Mark as image for potential vision analysis
+                        analyses[analyses.length - 1] += ' (Image content available for visual analysis)';
+                    }
+                }
+            }
+            // Process audio files
+            if (uploadedFiles.audio) {
+                for (const audioFile of uploadedFiles.audio) {
+                    const analysis = await analyzeFile(audioFile.path, audioFile.originalname);
+                    analyses.push(analysis);
+                }
+            }
+            if (analyses.length > 0) {
+                fileAnalysis = `\n\nUploaded Content Analysis:\n${analyses.join('\n')}`;
+            }
         }
-        try {
-            // Get Gemini model
-            const model = genAI.getGenerativeModel({ model: "gemini-pro" });
-            // Create contextual prompt for grief support and yahrzeit app
-            const basePrompt = `You are a compassionate grief support assistant for a Yahrzeit memorial app dedicated to the memory of Chaya Sara Leah bat Uri.
+        // Check if the selected AI provider's API key is configured
+        if (aiProvider === 'openai') {
+            if (!process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY === 'your_openai_api_key_here') {
+                return res.status(500).json({ error: 'OpenAI API key not configured' });
+            }
+        }
+        else if (aiProvider === 'gemini') {
+            if (!process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY === 'your_gemini_api_key_here') {
+                return res.status(500).json({ error: 'Gemini API key not configured' });
+            }
+        }
+        // Get model based on selected AI provider
+        let aiResponse;
+        let responseSource;
+        if (aiProvider === 'openai') {
+            // OpenAI ChatGPT Implementation
+            const systemPrompt = `You are a deeply compassionate grief counselor and spiritual guide for a Yahrzeit memorial app dedicated to the memory of Chaya Sara Leah bat Uri. You combine professional grief counseling with Jewish spiritual wisdom.
 
 Your role is to:
-- Provide warm, empathetic support for grief and loss
-- Share Jewish wisdom about remembrance and honoring loved ones
-- Help users process emotions about their departed loved ones
-- Suggest meaningful ways to honor memories (learning Torah, saying Tehillim, acts of kindness)
-- Be sensitive to Jewish traditions around mourning and yahrzeit observance
-- Offer comfort while acknowledging the reality of loss
+- Provide comprehensive, heartfelt support for grief, loss, and mourning
+- Share detailed Jewish wisdom, stories, and teachings about remembrance and honoring loved ones
+- Help users deeply process complex emotions about their departed loved ones
+- Offer specific, meaningful ways to honor memories (learning specific Torah portions, particular Tehillim chapters, detailed acts of kindness)
+- Integrate Jewish traditions around mourning, yahrzeit observance, and the soul's journey
+- Provide comfort while honestly acknowledging the profound reality of loss
+- Share relevant Jewish stories, parables, or teachings that relate to their situation
+- Offer practical spiritual guidance for different stages of grief
 
-Guidelines:
-- Always respond with warmth and empathy
-- Use Jewish concepts when appropriate (neshamah, olam haba, zechut, etc.)
-- Suggest concrete ways to honor memories
-- Acknowledge that grief is a natural expression of love
-- Be concise but meaningful
-- End responses with gentle encouragement or a thoughtful question`;
-            let systemPrompt;
-            // Enhanced contextual prompts based on conversation history
-            if (context && context.length > 0) {
-                systemPrompt = `${basePrompt}
+Response Guidelines:
+- Write responses that are substantial (4-6 meaningful paragraphs, 300+ words)
+- Always lead with deep empathy and emotional validation
+- Include specific Jewish concepts, stories, or teachings (neshamah, olam haba, zechut, tzaddik, kaddish, etc.)
+- Suggest very specific, actionable ways to honor memories with detailed explanations
+- Reference particular Tehillim chapters, Torah portions, or Jewish practices with context
+- Share wisdom from Jewish sages, Chassidic teachings, or relevant Jewish stories
+- Acknowledge that grief is sacred work and a form of love
+- Ask meaningful, thoughtful questions that invite deeper sharing
+- Create a sense of spiritual connection and eternal bonds
+- Be warm, wise, and deeply caring - like speaking with a beloved rabbi or spiritual mentor
 
-Past conversation context:
-${context}
+${context && context.length > 0 ? `
+Past conversation context: ${context}
+
+CRITICAL: You must provide a NEW, UNIQUE response that is completely different from any previous responses. DO NOT repeat yourself.
+` : ''}
+
+${relationship ? `User's relationship to deceased: ${relationship}. Use this to personalize your response appropriately.` : ''}
+
+${fileAnalysis ? `
+IMPORTANT - Uploaded Content to Analyze:${fileAnalysis}
+
+Please provide specific, thoughtful analysis of the uploaded content. If it's an image, describe what you observe and how it might relate to their memories and emotions. If it's audio or video, acknowledge the emotional significance of preserving voices and moments. Connect your analysis to Jewish concepts about memory, legacy, and the eternal nature of love.
+` : ''}
 
 Current user message: "${message}"
 
-First, consider the emotional state expressed. Then recall a relevant Torah idea or Jewish tradition. Then compose a 3-part comforting message that builds on the conversation history. End with a soft affirmation or reminder of eternal connection.`;
-            }
-            else {
-                systemPrompt = `${basePrompt}
-
-User: "${message}"
-
-Respond with empathy, comfort, and spiritual insight. Reference Jewish traditions, mourning customs, or Tehillim when relevant. End with a soft affirmation or reminder that love transcends physical existence.`;
-            }
-            // Add relationship context if available
-            if (relationship) {
-                systemPrompt += `\n\nUser's relationship to deceased: ${relationship}. Use this to personalize your response appropriately.`;
-            }
-            const result = await model.generateContent(systemPrompt);
-            const response = await result.response;
-            const text = response.text();
-            res.json({
-                message: text,
-                timestamp: new Date().toISOString(),
-                source: 'gemini'
+Respond with deep empathy, specific analysis of any uploaded content, Jewish wisdom, detailed memorial suggestions, and caring questions. Write 4-6 substantial paragraphs.`;
+            const completion = await openai.chat.completions.create({
+                model: "gpt-4o-mini",
+                messages: [
+                    { role: "system", content: systemPrompt },
+                    { role: "user", content: message + (fileAnalysis || '') }
+                ],
+                temperature: 0.8,
+                max_tokens: 800
             });
+            aiResponse = completion.choices[0].message.content;
+            responseSource = 'openai';
         }
-        catch (apiError) {
-            console.error('Gemini API error:', apiError);
-            return useFallbackResponse(res);
+        else {
+            // Enhanced Gemini AI Implementation using NeshamaBot
+            console.log('🤖 Using enhanced NeshamaBot (Gemini) for response...');
+            // Detect emotion for better response
+            const detectedEmotion = detectEmotion(message);
+            console.log(`😊 Detected emotion: ${detectedEmotion}`);
+            // Create enhanced message with context and file analysis
+            const enhancedMessage = `
+User's emotional state: ${detectedEmotion}
+Message: ${message}
+${context ? `\nConversation context: ${context}` : ''}
+${fileAnalysis ? `\nUploaded content analysis: ${fileAnalysis}` : ''}
+${relationship ? `\nRelationship to deceased: ${relationship}` : ''}
+
+Please provide a deeply compassionate response using Jewish wisdom and spiritual comfort.`;
+            aiResponse = await generateComfortingResponse(enhancedMessage);
+            responseSource = 'gemini-neshama';
+            console.log('🕯️ NeshamaBot response generated successfully');
+        }
+        res.json({
+            message: aiResponse,
+            timestamp: new Date().toISOString(),
+            source: responseSource,
+            aiProvider: aiProvider
+        });
+        // Clean up uploaded files after processing
+        if (uploadedFiles) {
+            const allFiles = [
+                ...(uploadedFiles.files || []),
+                ...(uploadedFiles.audio || [])
+            ];
+            allFiles.forEach(file => {
+                if (fs.existsSync(file.path)) {
+                    fs.unlinkSync(file.path);
+                }
+            });
         }
     }
     catch (error) {
-        console.error('Chat API error:', error);
-        return useFallbackResponse(res);
+        console.error('AI API error:', error);
+        res.status(500).json({
+            error: `Failed to generate response from ${aiProvider} AI`,
+            details: error.message
+        });
     }
 });
-function useFallbackResponse(res) {
-    // Enhanced fallback responses with 3-part structure: acknowledge emotion, Torah wisdom, comfort
-    const comfortResponses = [
-        "I hear the deep love in your words, and I want you to acknowledge that what you're feeling is completely natural and valid. Our tradition teaches us that 'שקר החן והבל היופי' - external beauty fades, but the love and connection you shared is eternal. Your loved one's neshamah continues to be elevated through your memories and the good deeds you do in their honor. How has their memory been guiding you lately?",
-        "The pain you're experiencing shows the profound bond you shared - grief is love with nowhere to go in this physical world. In Kohelet, we learn that there is 'עת לבכות ועת לשחוק' - a time to weep and a time to laugh, reminding us that all feelings have their place. Your loved one's soul continues its journey in olam haba, and the mitzvot you perform l'ilui nishmatam create an eternal connection. What brings you the most comfort when you think of them?",
-        "I can feel the weight you're carrying, and I want you to know that healing doesn't mean forgetting - it means learning to carry love in a way that honors their memory. The Talmud teaches that 'when a person dies, their good deeds speak for them' - your loved one's influence continues through you. Consider learning some Tehillim, studying Torah, or doing acts of chesed in their memory. What feels most meaningful to you right now?",
-        "Your heart is heavy, and that weight is actually a testament to the beautiful relationship you shared. Our sages teach that 'אין בן חורין אלא מי שעוסק בתורה' - true freedom comes through Torah, which connects us to something eternal. Through this yahrzeit app and your dedication to memory, you're already doing something sacred. Tell me about a special moment that makes their soul feel close to you.",
-        "In times of deep loss, we often search for ways to feel connected to those we miss dearly. The Zohar teaches us that souls are bound together by invisible threads of love that death cannot sever. Through learning, prayer, and acts of kindness, we strengthen that eternal bond. You're honoring their memory beautifully by being here. What would they want you to know right now?"
-    ];
-    const response = comfortResponses[Math.floor(Math.random() * comfortResponses.length)];
-    res.json({
-        message: response,
-        timestamp: new Date().toISOString(),
-        source: 'fallback'
-    });
-}
 export default router;

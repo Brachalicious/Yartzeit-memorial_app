@@ -62,9 +62,30 @@ function initializeTables(db) {
       CREATE TABLE IF NOT EXISTS letters (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         content TEXT NOT NULL,
+        mailbox TEXT,
+        recipient TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )
     `);
+        // Add new columns to existing letters table if they don't exist
+        try {
+            db.exec(`ALTER TABLE letters ADD COLUMN mailbox TEXT`);
+        }
+        catch (e) {
+            // Column already exists, ignore error
+        }
+        try {
+            db.exec(`ALTER TABLE letters ADD COLUMN recipient TEXT`);
+        }
+        catch (e) {
+            // Column already exists, ignore error
+        }
+        try {
+            db.exec(`ALTER TABLE letters ADD COLUMN sender TEXT`);
+        }
+        catch (e) {
+            // Column already exists, ignore error
+        }
         // Create learning_activities table
         db.exec(`
       CREATE TABLE IF NOT EXISTS learning_activities (
@@ -119,14 +140,14 @@ function initializeTables(db) {
     `);
         console.log('✅ Database tables and indexes created');
         // Insert sample data for Chaya Sara Leah if not exists
-        const existingEntry = db.prepare('SELECT id FROM yahrzeit_entries WHERE name = ?').get('Chaya Sara Leah Bas Uri');
+        const existingEntry = db.prepare('SELECT id FROM yahrzeit_entries WHERE name = ?').get('Chaya Sara Leah Bas Uri zt"l');
         if (!existingEntry) {
             try {
                 db.prepare(`
           INSERT INTO yahrzeit_entries (
             name, hebrew_name, death_date, hebrew_death_date, relationship, notes, notify_days_before
           ) VALUES (?, ?, ?, ?, ?, ?, ?)
-        `).run('Chaya Sara Leah Bas Uri', 'חיה שרה לאה בת אורי', '2024-11-23', '22/3/5785', 'Beloved Mother', 'A special soul who brought light to everyone she met. May her memory be a blessing.', 7);
+        `).run('Chaya Sara Leah Bas Uri zt"l', 'חיה שרה לאה בת אורי ז״ל', '2024-11-23', '22/3/5785', 'Beloved Mother', 'A special soul who brought light to everyone she met. May her memory be a blessing.', 7);
                 console.log('✅ Added sample yahrzeit entry for Chaya Sara Leah');
             }
             catch (error) {

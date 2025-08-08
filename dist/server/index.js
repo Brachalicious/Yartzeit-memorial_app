@@ -8,8 +8,11 @@ import learningRoutes from './routes/learning.js';
 import tehillimRoutes from './routes/tehillim.js';
 import shmirasHalashonRoutes from './routes/shmiras-halashon.js';
 import chatRoutes from './routes/chat.js';
+import chofetzChaimRoutes from './routes/chofetz-chaim.js';
 // Load environment variables first
 dotenv.config();
+console.log('🔑 Loaded Gemini API Key:', process.env.GEMINI_API_KEY ? '[SET]' : '[NOT SET]');
+console.log('🔑 Loaded OpenAI API Key:', process.env.OPENAI_API_KEY ? '[SET]' : '[NOT SET]');
 console.log('🔧 Initializing Yahrzeit Tracker server...');
 const app = express();
 // Enable CORS for all routes
@@ -32,7 +35,9 @@ app.get('/api/health', (req, res) => {
         timestamp: new Date().toISOString(),
         environment: process.env.NODE_ENV || 'development',
         message: 'Yahrzeit Tracker API is running',
-        dedication: 'ליועלי נשמת חיה שרה לאה בת אורי (In memory of Chaya Sara Leah Bas Uri)'
+        dedication: 'ליועלי נשמת חיה שרה לאה בת אורי ז״ל (In memory of Chaya Sara Leah Bas Uri zt"l)',
+        openaiKeyStatus: process.env.OPENAI_API_KEY ? 'SET' : 'NOT SET',
+        geminiKeyStatus: process.env.GEMINI_API_KEY ? 'SET' : 'NOT SET'
     });
     return;
 });
@@ -57,6 +62,7 @@ if (dbConnectionReady) {
     app.use('/api/tehillim', tehillimRoutes);
     app.use('/api/shmiras-halashon', shmirasHalashonRoutes);
     app.use('/api/chat', chatRoutes);
+    app.use('/api', chofetzChaimRoutes);
     console.log('✅ API routes configured');
 }
 else {
@@ -91,7 +97,7 @@ export async function startServer(port) {
             console.log(`🌐 Server: http://localhost:${port}`);
             console.log(`💾 Database: ${dbConnectionReady ? 'Connected' : 'Not available'}`);
             console.log(`🔌 API Health: http://localhost:${port}/api/health`);
-            console.log('🕯️  In memory of Chaya Sara Leah Bas Uri (ליועלי נשמת חיה שרה לאה בת אורי)');
+            console.log('🕯️  In memory of Chaya Sara Leah Bas Uri zt"l (ליועלי נשמת חיה שרה לאה בת אורי ז״ל)');
             console.log('');
         });
         // Graceful shutdown

@@ -36,81 +36,83 @@ export function useChatbot() {
       sender: 'user',
       timestamp: new Date().toISOString()
     };
-    
     setMessages(prev => [...prev, userMessage]);
     setIsTyping(true);
-    
     // Update conversation context
     const newContext = [...conversationState.context, content].slice(-5); // Keep last 5 messages
-    
-    try {
-      // Prepare form data for file uploads
-      const formData = new FormData();
-      formData.append('message', content);
-      formData.append('context', newContext.join(' | '));
-      formData.append('relationship', conversationState.userRelationship);
-      formData.append('aiProvider', aiProvider);
 
-      // Add files if provided
-      if (files && files.length > 0) {
-        files.forEach((file, index) => {
-          formData.append(`files`, file);
-        });
-      }
+    // Load API keys from Vite env
+    const geminiKey = import.meta.env.VITE_GEMINI_API_KEY;
+    const openaiKey = import.meta.env.VITE_OPENAI_API_KEY;
 
-      // Add audio if provided
-      if (audio) {
-        formData.append('audio', audio, 'recording.wav');
-      }
+    let reply = '';
+    let usedProvider = '';
 
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        body: formData, // Use FormData instead of JSON for file uploads
-      });
-
-      if (response.ok) {
+    // Try Gemini REST API first
+    if (geminiKey) {
+      try {
+        const response = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: content }] }]
+            })
+          }
+        );
         const data = await response.json();
-        
-        // Create bot response
-        const botMessage: ChatMessage = {
-          id: (Date.now() + 1).toString(),
-          content: data.message,
-          sender: 'bot',
-          timestamp: new Date().toISOString()
-        };
-        
-        setMessages(prev => [...prev, botMessage]);
-        setConversationState(prev => ({
-          ...prev,
-          context: newContext
-        }));
-      } else {
-        // Show error message if API fails
-        const errorMessage: ChatMessage = {
-          id: (Date.now() + 1).toString(),
-          content: "I'm sorry, I'm having trouble connecting right now. Please try again in a moment.",
-          sender: 'bot',
-          timestamp: new Date().toISOString()
-        };
-        setMessages(prev => [...prev, errorMessage]);
+        reply = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+        usedProvider = 'gemini';
+      } catch (err) {
+        console.error('Gemini API error:', err);
       }
-    } catch (error) {
-      console.error('API call failed:', error);
-      // Show error message if API fails
-      const errorMessage: ChatMessage = {
-        id: (Date.now() + 1).toString(),
-        content: "I'm sorry, I'm having trouble connecting right now. Please try again in a moment.",
+    }
+
+    // If Gemini failed or no key, try OpenAI
+    if (!reply && openaiKey) {
+      try {
+        const response = await fetch(
+          'https://api.openai.com/v1/chat/completions',
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${openaiKey}`
+            },
+            body: JSON.stringify({
+              model: 'gpt-4o-mini',
+              messages: [{ role: 'user', content }],
+              temperature: 0.7
+            })
+          }
+        );
+        const data = await response.json();
+        reply = data?.choices?.[0]?.message?.content || '';
+        usedProvider = 'openai';
+      } catch (err) {
+        console.error('OpenAI API error:', err);
+      }
+    }
+
+    // If both fail, show unavailable
+    if (!reply) {
+      console.error('No valid API key or both providers failed');
+      reply = 'Bot unavailable. Please contact support.';
+      usedProvider = 'none';
+    }
+
+    setMessages(prev => [
+      ...prev,
+      {
+        id: Date.now().toString(),
+        content: reply,
         sender: 'bot',
         timestamp: new Date().toISOString()
-      };
-      setMessages(prev => [...prev, errorMessage]);
-    }
-    
-    setConversationState(prev => ({
-      ...prev,
-      context: newContext
-    }));
+      }
+    ]);
     setIsTyping(false);
+    return;
   };
 
   return {

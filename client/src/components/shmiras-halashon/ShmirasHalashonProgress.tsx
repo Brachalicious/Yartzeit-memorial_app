@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { ShmirasHalashonStats } from '@/types/shmiras-halashon';
 import { TrendingUp, Calendar, MessageSquare, Heart, BookOpen, Users, Flame } from 'lucide-react';
+import ChofetzPortrait from "@/components/ChofetzPortrait";
 
 interface ShmirasHalashonProgressProps {
   stats: ShmirasHalashonStats;
@@ -13,6 +14,15 @@ export function ShmirasHalashonProgress({ stats }: ShmirasHalashonProgressProps)
 
   return (
     <div className="space-y-6">
+      {/* Chofetz Chaim greeting and image - only once, force large size with inline styles */}
+      <div className="flex flex-col items-center mb-6">
+        <ChofetzPortrait size={700} className="mx-auto" />
+        <div className="text-3xl font-bold text-blue-900 mb-2">Chofetz Chaim</div>
+        <div className="text-lg text-gray-700 text-center max-w-2xl">
+          Shalom, my dear friend! I am here to help you with questions about Shmiras HaLashon - the mitzvah of guarding your speech. Whether you need guidance about specific situations, encouragement in your spiritual journey, or want to learn the halachos of proper speech, I'm here to assist you with warmth and wisdom. What would you like to discuss today? 🕯️
+        </div>
+      </div>
+
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">

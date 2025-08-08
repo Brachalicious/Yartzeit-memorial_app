@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { ChatMessage as ChatMessageType } from '@/types/chat';
-import { Heart, Bot, User } from 'lucide-react';
+import { User } from 'lucide-react';
 
 interface ChatMessageProps {
   message: ChatMessageType;
@@ -11,12 +11,14 @@ export function ChatMessage({ message }: ChatMessageProps) {
   
   return (
     <div className={`flex gap-3 ${isBot ? '' : 'flex-row-reverse'}`}>
-      <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
+      <div className={`flex-shrink-0 flex items-center justify-center ${
         isBot 
           ? 'bg-purple-100 dark:bg-purple-900 text-purple-600 dark:text-purple-400' 
           : 'bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400'
       }`}>
-        {isBot ? <Heart className="h-4 w-4" /> : <User className="h-4 w-4" />}
+        {isBot 
+          ? <img src="/chofetz_chaim.svg" alt="Chofetz Chaim Bot" className="block mx-auto object-contain" style={{ width: 500, height: 500 }} />
+          : <User className="h-[300px] w-[300px]" />}
       </div>
       
       <div className={`max-w-[80%] rounded-lg p-3 ${

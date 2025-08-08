@@ -13,6 +13,7 @@ import { ShmirasHalashonHistory } from './ShmirasHalashonHistory';
 import { useShmirasHalashon } from '@/hooks/useShmirasHalashon';
 import { useChofetzChaim } from '@/hooks/useChofetzChaim';
 import { cn } from '@/lib/utils';
+import ChofetzPortrait from "@/components/ChofetzPortrait";
 
 interface ShmirasHalashonSectionProps {
   onComplete?: () => void;
@@ -130,20 +131,15 @@ export function ShmirasHalashonSection({ onComplete }: ShmirasHalashonSectionPro
                 onClick={handleChofetzChaimClick}
                 title="Click to ask the Chofetz Chaim about Shmiras HaLashon!"
               >
-                <img 
-                  src="/chofetz_chaim.png" 
-                  alt="The Chofetz Chaim - Click to ask questions!" 
-                  className="w-24 h-32 md:w-32 md:h-40 object-contain rounded-lg shadow-lg transition-all duration-300 hover:shadow-xl"
-                  style={{
-                    filter: 'drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1))',
-                    background: 'transparent'
-                  }}
-                />
+                <div className="flex justify-center w-full">
+                  <ChofetzPortrait size={700} className="mx-auto md:w-[700px] md:h-[700px]" />
+                </div>
+                
                 {/* Glow effect on hover */}
                 <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-purple-400/20 to-blue-400/20 opacity-0 hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
                 
                 {/* Click instruction - moved much further down */}
-                <div className="absolute -bottom-20 left-1/2 transform -translate-x-1/2 text-center">
+                <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 text-center">
                   <p className="text-xs text-purple-600 font-medium bg-white/80 px-2 py-1 rounded-full shadow-sm">
                     Click me for guidance! 💬
                   </p>
@@ -328,14 +324,13 @@ export function ShmirasHalashonSection({ onComplete }: ShmirasHalashonSectionPro
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-3">
                   <img 
-                    src="/chofetz_chaim.png" 
+                    src="/chofetz_chaim.svg" 
                     alt="Chofetz Chaim" 
-                    className="w-12 h-16 object-contain rounded-lg bg-white/10 p-1"
+                    className="w-16 h-20 object-contain rounded-lg bg-white/10 p-1"
                     style={{ background: 'transparent' }}
                   />
                   <div>
-                    <CardTitle className="text-xl">Ask the Chofetz Chaim</CardTitle>
-                    <p className="text-purple-100 text-sm">Guidance on Shmiras HaLashon</p>
+                    <CardTitle className="text-xl text-blue-900 font-bold">Ask the Chofetz Chaim</CardTitle>
                   </div>
                 </div>
                 <Button
@@ -348,10 +343,27 @@ export function ShmirasHalashonSection({ onComplete }: ShmirasHalashonSectionPro
                 </Button>
               </div>
             </CardHeader>
-            
             <CardContent className="p-0 flex flex-col h-[60vh]">
               {/* Messages Area */}
               <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gradient-to-b from-purple-50/30 to-blue-50/30">
+                {/* Bot greeting at top, only once */}
+                {/* <div className="flex justify-start">
+                  <div className="max-w-[80%] p-3 rounded-lg bg-white border border-purple-200 shadow-sm mr-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <img 
+                        src="/chofetz_chaim.svg" 
+                        alt="Chofetz Chaim" 
+                        className="w-8 h-10 object-contain"
+                        style={{ background: 'transparent' }}
+                      />
+                      <span className="text-xs font-semibold text-purple-700">Chofetz Chaim</span>
+                    </div>
+                    <p className="text-sm leading-relaxed text-gray-800">
+                      Shalom, my dear friend! I am here to help you with questions about Shmiras HaLashon - the mitzvah of guarding your speech. Whether you need guidance about specific situations, encouragement in your spiritual journey, or want to learn the halachos of proper speech, I'm here to assist you with warmth and wisdom. What would you like to discuss today? 🕯️
+                    </p>
+                  </div>
+                </div> */}
+                {/* Render user and bot messages below greeting */}
                 {messages.map((message) => (
                   <div
                     key={message.id}
@@ -364,17 +376,16 @@ export function ShmirasHalashonSection({ onComplete }: ShmirasHalashonSectionPro
                           : 'bg-white border border-purple-200 shadow-sm mr-4'
                       }`}
                     >
+                      {/* Only show bot image/name for bot messages after greeting */}
                       {!message.isUser && (
                         <div className="flex items-center gap-2 mb-2">
                           <img 
-                            src="/chofetz_chaim.png" 
+                            src="/chofetz_chaim.svg" 
                             alt="Chofetz Chaim" 
                             className="w-6 h-8 object-contain"
                             style={{ background: 'transparent' }}
                           />
-                          <span className="text-xs font-semibold text-purple-700">
-                            The Chofetz Chaim
-                          </span>
+                          <span className="text-xs font-semibold text-purple-700">Chofetz Chaim</span>
                         </div>
                       )}
                       <p className={`text-sm leading-relaxed ${message.isUser ? 'text-white' : 'text-gray-800'}`}>
@@ -392,7 +403,7 @@ export function ShmirasHalashonSection({ onComplete }: ShmirasHalashonSectionPro
                     <div className="bg-white border border-purple-200 shadow-sm mr-4 p-3 rounded-lg">
                       <div className="flex items-center gap-2 mb-2">
                         <img 
-                          src="/chofetz_chaim.png" 
+                          src="/chofetz_chaim.svg" 
                           alt="Chofetz Chaim" 
                           className="w-6 h-8 object-contain"
                           style={{ background: 'transparent' }}
