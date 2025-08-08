@@ -14,14 +14,60 @@ interface TehillimSectionProps {
 }
 
 const TEHILLIM_OPTIONS = [
-  { value: 'chapter-23', title: 'Chapter 23 - Mizmor L\'David', description: 'The Lord is my shepherd' },
-  { value: 'chapter-121', title: 'Chapter 121 - Shir LaMaalot', description: 'I lift my eyes to the mountains' },
-  { value: 'chapter-130', title: 'Chapter 130 - Shir HaMaalot', description: 'From the depths I call to You' },
-  { value: 'chapter-142', title: 'Chapter 142 - Maskil L\'David', description: 'I cry out to the Lord' },
-  { value: 'chapter-20', title: 'Chapter 20 - LaMenatzeiach', description: 'May the Lord answer you in distress' },
-  { value: 'chapter-91', title: 'Chapter 91 - Yoshev B\'Seter', description: 'He who dwells in shelter' },
-  { value: 'daily-portion', title: 'Daily Tehillim Portion', description: 'Monthly cycle based on today\'s date' },
-  { value: 'custom', title: 'Custom Chapters', description: 'Choose specific chapters' }
+  { 
+    value: 'chapter-23', 
+    title: 'Chapter 23 - Mizmor L\'David', 
+    description: 'The Lord is my shepherd',
+    chapterNumber: 23,
+    sefariaLink: 'https://www.sefaria.org/Psalms.23'
+  },
+  { 
+    value: 'chapter-121', 
+    title: 'Chapter 121 - Shir LaMaalot', 
+    description: 'I lift my eyes to the mountains',
+    chapterNumber: 121,
+    sefariaLink: 'https://www.sefaria.org/Psalms.121'
+  },
+  { 
+    value: 'chapter-130', 
+    title: 'Chapter 130 - Shir HaMaalot', 
+    description: 'From the depths I call to You',
+    chapterNumber: 130,
+    sefariaLink: 'https://www.sefaria.org/Psalms.130'
+  },
+  { 
+    value: 'chapter-142', 
+    title: 'Chapter 142 - Maskil L\'David', 
+    description: 'I cry out to the Lord',
+    chapterNumber: 142,
+    sefariaLink: 'https://www.sefaria.org/Psalms.142'
+  },
+  { 
+    value: 'chapter-20', 
+    title: 'Chapter 20 - LaMenatzeiach', 
+    description: 'May the Lord answer you in distress',
+    chapterNumber: 20,
+    sefariaLink: 'https://www.sefaria.org/Psalms.20'
+  },
+  { 
+    value: 'chapter-91', 
+    title: 'Chapter 91 - Yoshev B\'Seter', 
+    description: 'He who dwells in shelter',
+    chapterNumber: 91,
+    sefariaLink: 'https://www.sefaria.org/Psalms.91'
+  },
+  { 
+    value: 'daily-portion', 
+    title: 'Daily Tehillim Portion', 
+    description: 'Monthly cycle based on today\'s date',
+    sefariaLink: 'https://www.sefaria.org/Psalms'
+  },
+  { 
+    value: 'custom', 
+    title: 'Custom Chapters', 
+    description: 'Choose specific chapters',
+    sefariaLink: 'https://www.sefaria.org/Psalms'
+  }
 ];
 
 // Simple Tehillim Chapter Form Component
@@ -138,6 +184,61 @@ function SimpleTehillimChapterForm({ onComplete, remainingChapters = [] }: {
         >
           <Check className="h-4 w-4" />
           {isCompleting ? 'Recording...' : 'I Have Completed This Chapter'}
+        </Button>
+
+        {/* Share Chapter Learning Button */}
+        <Button
+          onClick={() => {
+            const chapterText = `🕯️ I just completed Tehillim Chapter ${chapterNumber} in memory of Chaya Sara Leah Bas Uri zt"l
+
+📖 ${chapterName ? `${chapterName} - ` : ''}Psalm ${chapterNumber}
+${notes ? `💭 My reflection: ${notes}` : ''}
+
+Join me in saying Tehillim to elevate her holy neshomah: ${window.location.href}
+
+לעילוי נשמת חיה שרה לאה בת אורי ז״ל`;
+
+            const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(chapterText)}`;
+            const emailUrl = `mailto:?subject=${encodeURIComponent(`Tehillim Chapter ${chapterNumber} for Chaya Sara Leah`)}&body=${encodeURIComponent(chapterText)}`;
+            
+            // Create share menu
+            const shareMenu = document.createElement('div');
+            shareMenu.style.cssText = `
+              position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+              background: white; border-radius: 12px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+              padding: 20px; z-index: 1000; min-width: 300px;
+            `;
+            
+            shareMenu.innerHTML = `
+              <h3 style="margin: 0 0 15px 0; font-weight: bold; color: #1e40af;">Share Chapter ${chapterNumber}</h3>
+              <div style="display: flex; flex-direction: column; gap: 10px;">
+                <button onclick="window.open('${whatsappUrl}', '_blank'); document.body.removeChild(document.querySelector('[data-chapter-menu]'))" 
+                        style="background: #25d366; color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold;">
+                  📱 Share via WhatsApp
+                </button>
+                <button onclick="window.open('${emailUrl}', '_blank'); document.body.removeChild(document.querySelector('[data-chapter-menu]'))" 
+                        style="background: #ea4335; color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold;">
+                  📧 Share via Email
+                </button>
+                <button onclick="navigator.clipboard.writeText('${chapterText.replace(/'/g, "\\'")}'); alert('📋 Chapter learning shared!'); document.body.removeChild(document.querySelector('[data-chapter-menu]'))" 
+                        style="background: #6366f1; color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold;">
+                  📋 Copy to Clipboard
+                </button>
+                <button onclick="document.body.removeChild(document.querySelector('[data-chapter-menu]'))" 
+                        style="background: #6b7280; color: white; border: none; padding: 8px; border-radius: 8px; cursor: pointer;">
+                  Cancel
+                </button>
+              </div>
+            `;
+            
+            shareMenu.setAttribute('data-chapter-menu', 'true');
+            document.body.appendChild(shareMenu);
+          }}
+          variant="outline"
+          className="w-full bg-green-50 hover:bg-green-100 text-green-700 border-green-200"
+          disabled={!chapterNumber || parseInt(chapterNumber) < 1 || parseInt(chapterNumber) > 150}
+        >
+          📤 Share This Chapter
         </Button>
       </CardContent>
     </Card>
@@ -337,6 +438,14 @@ export function TehillimSection({ onComplete }: TehillimSectionProps) {
           Progress Tracker
         </Button>
         <Button
+          variant="outline"
+          onClick={() => window.open('https://www.sefaria.org/Psalms?tab=contents', '_blank')}
+          size="sm"
+          className="bg-blue-50 hover:bg-blue-100 text-blue-700"
+        >
+          📖 Full Book of Psalms (Sefaria)
+        </Button>
+        <Button
           variant={activeTab === 'history' ? 'default' : 'outline'}
           onClick={() => setActiveTab('history')}
           size="sm"
@@ -347,6 +456,48 @@ export function TehillimSection({ onComplete }: TehillimSectionProps) {
 
       {activeTab === 'quick' && (
         <div className="space-y-6">
+          <Card className="bg-gradient-to-r from-blue-50 via-purple-50 to-blue-50 border-blue-200">
+            <CardHeader>
+              <CardTitle className="bg-gradient-to-r from-blue-600 via-purple-500 to-blue-600 bg-clip-text text-transparent">
+                📖 Popular Tehillim Chapters
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="bg-gradient-to-r from-blue-700 via-purple-600 to-blue-700 bg-clip-text text-transparent">
+                Quick access to commonly recited Tehillim chapters for comfort and healing.
+              </p>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <Button 
+                  onClick={() => window.open('https://www.sefaria.org/Psalms.23', '_blank')}
+                  className="w-full bg-blue-400 hover:bg-blue-500 justify-start"
+                >
+                  🙏 Psalm 23 - The Lord is my shepherd
+                </Button>
+                <Button 
+                  onClick={() => window.open('https://www.sefaria.org/Psalms.91', '_blank')}
+                  className="w-full bg-green-400 hover:bg-green-500 justify-start"
+                >
+                  🛡️ Psalm 91 - He who dwells in shelter
+                </Button>
+                <Button 
+                  onClick={() => window.open('https://www.sefaria.org/Psalms.121', '_blank')}
+                  className="w-full bg-purple-400 hover:bg-purple-500 justify-start"
+                >
+                  🏔️ Psalm 121 - I lift my eyes to the mountains
+                </Button>
+                <Button 
+                  onClick={() => window.open('https://www.sefaria.org/Psalms.130', '_blank')}
+                  className="w-full bg-purple-400 hover:bg-purple-500 justify-start"
+                >
+                  🙏 Psalm 130 - From the depths I call
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+
+
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -373,6 +524,51 @@ export function TehillimSection({ onComplete }: TehillimSectionProps) {
                   </SelectContent>
                 </Select>
               </div>
+
+              {/* Show study/complete options when a Tehillim option is selected */}
+              {selectedOption && selectedOption !== 'custom' && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-4">
+                  <div className="text-center">
+                    <h3 className="font-semibold text-blue-800 mb-2">
+                      {TEHILLIM_OPTIONS.find(opt => opt.value === selectedOption)?.title}
+                    </h3>
+                    <p className="text-sm text-blue-600 mb-4">
+                      {TEHILLIM_OPTIONS.find(opt => opt.value === selectedOption)?.description}
+                    </p>
+                    
+                    <div className="flex gap-3 justify-center">
+                      <Button
+                        onClick={() => {
+                          const option = TEHILLIM_OPTIONS.find(opt => opt.value === selectedOption);
+                          if (option?.sefariaLink) {
+                            window.open(option.sefariaLink, '_blank');
+                          }
+                        }}
+                        className="bg-blue-600 hover:bg-blue-700 text-white"
+                      >
+                        📖 Study on Sefaria
+                      </Button>
+                      
+                      <Button
+                        onClick={() => {
+                          const option = TEHILLIM_OPTIONS.find(opt => opt.value === selectedOption);
+                          if (option?.chapterNumber) {
+                            // Auto-fill chapter for quick completion
+                            const chapterForm = document.querySelector('[data-chapter-form]') as HTMLElement;
+                            if (chapterForm) {
+                              chapterForm.scrollIntoView({ behavior: 'smooth' });
+                            }
+                          }
+                        }}
+                        variant="outline"
+                        className="border-blue-300 text-blue-700 hover:bg-blue-50"
+                      >
+                        ✅ Mark as Complete
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {selectedOption === 'custom' && (
                 <div className="space-y-2">
@@ -406,6 +602,64 @@ export function TehillimSection({ onComplete }: TehillimSectionProps) {
                 <Check className="h-4 w-4" />
                 {isCompleting ? 'Recording...' : 'I Have Completed This Tehillim'}
               </Button>
+
+              {/* Share Learning Button */}
+              <Button
+                onClick={() => {
+                  const selectedTehillim = TEHILLIM_OPTIONS.find(opt => opt.value === selectedOption);
+                  const learningText = `🕯️ I just completed Tehillim in memory of Chaya Sara Leah Bas Uri zt"l
+
+📖 ${selectedTehillim?.title || 'Custom Tehillim'}
+${selectedTehillim?.description || ''}
+
+${notes ? `💭 My reflection: ${notes}` : ''}
+
+Join me in learning and saying Tehillim to elevate her holy neshomah: ${window.location.href}
+
+לעילוי נשמת חיה שרה לאה בת אורי ז״ל`;
+
+                  const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(learningText)}`;
+                  const emailUrl = `mailto:?subject=${encodeURIComponent('Tehillim Learning in Memory of Chaya Sara Leah')}&body=${encodeURIComponent(learningText)}`;
+                  
+                  // Create share menu
+                  const shareMenu = document.createElement('div');
+                  shareMenu.style.cssText = `
+                    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+                    background: white; border-radius: 12px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+                    padding: 20px; z-index: 1000; min-width: 300px;
+                  `;
+                  
+                  shareMenu.innerHTML = `
+                    <h3 style="margin: 0 0 15px 0; font-weight: bold; color: #1e40af;">Share Your Learning</h3>
+                    <div style="display: flex; flex-direction: column; gap: 10px;">
+                      <button onclick="window.open('${whatsappUrl}', '_blank'); document.body.removeChild(document.querySelector('[data-learning-menu]'))" 
+                              style="background: #25d366; color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold;">
+                        📱 Share via WhatsApp
+                      </button>
+                      <button onclick="window.open('${emailUrl}', '_blank'); document.body.removeChild(document.querySelector('[data-learning-menu]'))" 
+                              style="background: #ea4335; color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold;">
+                        📧 Share via Email
+                      </button>
+                      <button onclick="navigator.clipboard.writeText('${learningText.replace(/'/g, "\\'")}'); alert('📋 Learning shared to clipboard!'); document.body.removeChild(document.querySelector('[data-learning-menu]'))" 
+                              style="background: #6366f1; color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold;">
+                        📋 Copy to Clipboard
+                      </button>
+                      <button onclick="document.body.removeChild(document.querySelector('[data-learning-menu]'))" 
+                              style="background: #6b7280; color: white; border: none; padding: 8px; border-radius: 8px; cursor: pointer;">
+                        Cancel
+                      </button>
+                    </div>
+                  `;
+                  
+                  shareMenu.setAttribute('data-learning-menu', 'true');
+                  document.body.appendChild(shareMenu);
+                }}
+                variant="outline"
+                className="w-full bg-green-50 hover:bg-green-100 text-green-700 border-green-200"
+                disabled={!selectedOption}
+              >
+                📤 Share My Learning
+              </Button>
             </CardContent>
           </Card>
 
@@ -424,10 +678,12 @@ export function TehillimSection({ onComplete }: TehillimSectionProps) {
       )}
 
       {activeTab === 'individual' && (
-        <SimpleTehillimChapterForm 
-          onComplete={createChapter}
-          remainingChapters={progress?.remaining_chapters}
-        />
+        <div data-chapter-form>
+          <SimpleTehillimChapterForm 
+            onComplete={createChapter}
+            remainingChapters={progress?.remaining_chapters}
+          />
+        </div>
       )}
 
       {activeTab === 'progress' && progress && (

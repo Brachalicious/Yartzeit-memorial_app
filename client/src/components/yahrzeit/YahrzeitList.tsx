@@ -21,9 +21,11 @@ export function YahrzeitList({ entries, onEdit, onDelete }: YahrzeitListProps) {
 
   if (entries.length === 0) {
     return (
-      <Card>
-        <CardContent className="p-6 text-center text-muted-foreground">
-          No yahrzeit entries found. Add your first entry above.
+      <Card className="bg-gradient-to-r from-blue-50 via-amber-50 to-blue-50 border-blue-200">
+        <CardContent className="p-6 text-center">
+          <p className="bg-gradient-to-r from-blue-600 via-amber-500 to-blue-600 bg-clip-text text-transparent">
+            No yahrzeit entries found. Add your first entry above.
+          </p>
         </CardContent>
       </Card>
     );
@@ -32,13 +34,17 @@ export function YahrzeitList({ entries, onEdit, onDelete }: YahrzeitListProps) {
   return (
     <div className="space-y-4">
       {entries.map((entry) => (
-        <Card key={entry.id}>
-          <CardHeader className="pb-3">
+        <Card key={entry.id} className="bg-gradient-to-r from-blue-50 via-amber-50 to-blue-50 border-blue-200 shadow-md">
+          <CardHeader className="pb-3 bg-gradient-to-r from-blue-100 via-amber-100 to-blue-100">
             <div className="flex justify-between items-start">
               <div>
-                <CardTitle className="text-lg">{entry.name}</CardTitle>
+                <CardTitle className="text-lg bg-gradient-to-r from-blue-700 via-amber-600 to-blue-700 bg-clip-text text-transparent font-bold">
+                  {entry.name}
+                </CardTitle>
                 {entry.hebrew_name && (
-                  <p className="text-sm text-muted-foreground mt-1">{entry.hebrew_name}</p>
+                  <p className="text-sm bg-gradient-to-r from-blue-600 via-amber-500 to-blue-600 bg-clip-text text-transparent font-semibold mt-1">
+                    {entry.hebrew_name}
+                  </p>
                 )}
               </div>
               <div className="flex gap-2">
@@ -62,23 +68,23 @@ export function YahrzeitList({ entries, onEdit, onDelete }: YahrzeitListProps) {
           <CardContent className="pt-0">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
               <div>
-                <p className="font-medium">Date of Passing</p>
-                <p className="text-muted-foreground">{formatDate(entry.death_date)}</p>
+                <p className="font-medium bg-gradient-to-r from-blue-700 via-amber-600 to-blue-700 bg-clip-text text-transparent">Date of Passing</p>
+                <p className="bg-gradient-to-r from-blue-600 via-amber-500 to-blue-600 bg-clip-text text-transparent">{formatDate(entry.death_date)}</p>
               </div>
               {entry.relationship && (
                 <div>
-                  <p className="font-medium">Relationship</p>
-                  <p className="text-muted-foreground">{entry.relationship}</p>
+                  <p className="font-medium bg-gradient-to-r from-blue-700 via-amber-600 to-blue-700 bg-clip-text text-transparent">Relationship</p>
+                  <p className="bg-gradient-to-r from-blue-600 via-amber-500 to-blue-600 bg-clip-text text-transparent">{entry.relationship}</p>
                 </div>
               )}
               <div>
-                <p className="font-medium">Notification</p>
-                <p className="text-muted-foreground">{entry.notify_days_before} days before</p>
+                <p className="font-medium bg-gradient-to-r from-blue-700 via-amber-600 to-blue-700 bg-clip-text text-transparent">Notification</p>
+                <p className="bg-gradient-to-r from-blue-600 via-amber-500 to-blue-600 bg-clip-text text-transparent">{entry.notify_days_before} days before</p>
               </div>
               {entry.notes && (
                 <div className="md:col-span-2">
-                  <p className="font-medium">Notes</p>
-                  <p className="text-muted-foreground">{entry.notes}</p>
+                  <p className="font-medium bg-gradient-to-r from-blue-700 via-amber-600 to-blue-700 bg-clip-text text-transparent">Notes</p>
+                  <p className="bg-gradient-to-r from-blue-600 via-amber-500 to-blue-600 bg-clip-text text-transparent">{entry.notes}</p>
                 </div>
               )}
             </div>

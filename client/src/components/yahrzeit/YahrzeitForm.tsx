@@ -57,15 +57,19 @@ export function YahrzeitForm({ onSubmit, initialData, title = "Add Yahrzeit Entr
   };
 
   return (
-    <Card>
+    <Card className="bg-gradient-to-r from-yellow-50 via-amber-50 to-yellow-50 border-amber-200">
       <CardHeader>
-        <CardTitle>{title}</CardTitle>
+        <CardTitle className="bg-gradient-to-r from-yellow-600 via-amber-500 to-yellow-600 bg-clip-text text-transparent">
+          {title}
+        </CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Name *</Label>
+              <Label htmlFor="name" className="bg-gradient-to-r from-yellow-700 via-amber-600 to-yellow-700 bg-clip-text text-transparent font-semibold">
+                Name *
+              </Label>
               <Input
                 id="name"
                 type="text"
@@ -73,41 +77,50 @@ export function YahrzeitForm({ onSubmit, initialData, title = "Add Yahrzeit Entr
                 onChange={(e) => handleInputChange('name', e.target.value)}
                 placeholder="Enter name"
                 required
+                className="text-blue-700 placeholder:text-blue-400 border-amber-300 focus:border-amber-500 focus:ring-amber-200"
               />
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="hebrew_name">Hebrew Name</Label>
+              <Label htmlFor="hebrew_name" className="bg-gradient-to-r from-yellow-700 via-amber-600 to-yellow-700 bg-clip-text text-transparent font-semibold">
+                Hebrew Name
+              </Label>
               <Input
                 id="hebrew_name"
                 type="text"
                 value={formData.hebrew_name}
                 onChange={(e) => handleInputChange('hebrew_name', e.target.value)}
                 placeholder="Enter Hebrew name"
+                className="text-blue-700 placeholder:text-blue-400 border-amber-300 focus:border-amber-500 focus:ring-amber-200"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="death_date">Date of Passing *</Label>
+              <Label htmlFor="death_date" className="bg-gradient-to-r from-yellow-700 via-amber-600 to-yellow-700 bg-clip-text text-transparent font-semibold">
+                Date of Passing *
+              </Label>
               <Input
                 id="death_date"
                 type="date"
                 value={formData.death_date}
                 onChange={(e) => handleInputChange('death_date', e.target.value)}
                 required
+                className="text-blue-700 border-amber-300 focus:border-amber-500 focus:ring-amber-200"
               />
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="relationship">Relationship</Label>
+              <Label htmlFor="relationship" className="bg-gradient-to-r from-yellow-700 via-amber-600 to-yellow-700 bg-clip-text text-transparent font-semibold">
+                Relationship
+              </Label>
               <Select
                 value={formData.relationship}
                 onValueChange={(value) => handleInputChange('relationship', value)}
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select relationship" />
+                <SelectTrigger className="text-blue-700 border-amber-300 focus:border-amber-500 focus:ring-amber-200">
+                  <SelectValue placeholder="Select relationship" className="text-blue-400" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Parent">Parent</SelectItem>
@@ -125,12 +138,14 @@ export function YahrzeitForm({ onSubmit, initialData, title = "Add Yahrzeit Entr
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="notify_days_before">Notification Days Before</Label>
+            <Label htmlFor="notify_days_before" className="bg-gradient-to-r from-yellow-700 via-amber-600 to-yellow-700 bg-clip-text text-transparent font-semibold">
+              Notification Days Before
+            </Label>
             <Select
               value={formData.notify_days_before.toString()}
               onValueChange={(value) => handleInputChange('notify_days_before', parseInt(value))}
             >
-              <SelectTrigger>
+              <SelectTrigger className="text-blue-700 border-amber-300 focus:border-amber-500 focus:ring-amber-200">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -144,17 +159,24 @@ export function YahrzeitForm({ onSubmit, initialData, title = "Add Yahrzeit Entr
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="notes">Notes</Label>
+            <Label htmlFor="notes" className="bg-gradient-to-r from-yellow-700 via-amber-600 to-yellow-700 bg-clip-text text-transparent font-semibold">
+              Notes
+            </Label>
             <Input
               id="notes"
               type="text"
               value={formData.notes}
               onChange={(e) => handleInputChange('notes', e.target.value)}
               placeholder="Additional notes or memories"
+              className="text-blue-700 placeholder:text-blue-400 border-amber-300 focus:border-amber-500 focus:ring-amber-200"
             />
           </div>
 
-          <Button type="submit" disabled={submitting} className="w-full">
+          <Button 
+            type="submit" 
+            disabled={submitting} 
+            className="w-full bg-sky-400 hover:bg-sky-500 text-white font-semibold border-0 shadow-md"
+          >
             {submitting ? 'Saving...' : initialData ? 'Update Entry' : 'Add Entry'}
           </Button>
         </form>

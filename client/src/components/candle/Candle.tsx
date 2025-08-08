@@ -1,55 +1,54 @@
-import * as React from 'react';
+import React, { useState } from 'react';
+import '../../index.css'; // make sure Tailwind & flicker animation are loaded
 
 interface CandleProps {
-  isLit: boolean;
-  onLightCandle: () => void;
+  isLit?: boolean;
+  onLightCandle?: () => void;
 }
 
-export function Candle({ isLit, onLightCandle }: CandleProps) {
+const Candle: React.FC<CandleProps> = ({ isLit: propIsLit, onLightCandle }) => {
+  const [internalIsLit, setInternalIsLit] = useState(false);
+  
+  // Use prop if provided, otherwise use internal state
+  const isLit = propIsLit !== undefined ? propIsLit : internalIsLit;
+
+  const toggleCandle = () => {
+    if (onLightCandle) {
+      onLightCandle();
+    } else {
+      setInternalIsLit(!internalIsLit);
+    }
+  };
+
   return (
-    <div className="relative flex flex-col items-center">
-      {/* Flame */}
-      {isLit && (
-        <div className="relative mb-1">
-          <div className="w-4 h-8 bg-gradient-to-t from-orange-400 via-yellow-400 to-red-400 rounded-full animate-pulse relative">
-            <div className="absolute inset-0 w-4 h-8 bg-gradient-to-t from-orange-500 via-yellow-300 to-yellow-100 rounded-full animate-bounce" 
-                 style={{ animationDuration: '1.5s' }}>
-            </div>
-            <div className="absolute top-1 left-1/2 transform -translate-x-1/2 w-2 h-4 bg-gradient-to-t from-yellow-300 to-white rounded-full opacity-80 animate-pulse">
-            </div>
-          </div>
-          {/* Glow effect */}
-          <div className="absolute -inset-2 bg-orange-300 rounded-full blur-lg opacity-30 animate-pulse"></div>
-        </div>
-      )}
-      
-      {/* Wick */}
-      <div 
-        className={`w-1 h-3 transition-colors cursor-pointer ${
-          isLit ? 'bg-red-800' : 'bg-gray-800 hover:bg-gray-600'
-        }`}
-        onClick={!isLit ? onLightCandle : undefined}
-        title={!isLit ? 'Click to light the candle' : 'Wick is burning'}
-      ></div>
-      
-      {/* Candle body */}
-      <div className="w-12 h-32 bg-gradient-to-b from-amber-100 to-amber-200 dark:from-amber-200 dark:to-amber-300 rounded-sm shadow-lg">
-        <div className="w-full h-2 bg-amber-200 dark:bg-amber-300 rounded-t-sm"></div>
-      </div>
-      
-      {/* Candle base/holder */}
-      <div className="w-16 h-4 bg-gradient-to-b from-gray-300 to-gray-400 dark:from-gray-600 dark:to-gray-700 rounded-sm shadow-md mt-1">
-        <div className="w-full h-1 bg-gray-200 dark:bg-gray-500 rounded-t-sm"></div>
-      </div>
-      
-      {/* Dripping wax effect when lit */}
-      {isLit && (
-        <div className="absolute top-20 left-1/2 transform -translate-x-1/2">
-          <div className="w-1 h-4 bg-amber-100 dark:bg-amber-200 rounded-full opacity-70 animate-pulse" 
-               style={{ animationDelay: '0.5s' }}>
+    <div className="flex justify-center mt-4">
+      <div className="relative">
+        <img
+          src={isLit ? 'candle_lit.png' : 'candle_unlit.png'}
+          alt={isLit ? 'Lit Candle' : 'Unlit Candle'}
+          onClick={toggleCandle}
+          className={`cursor-pointer transition duration-300 ${
+            isLit ? 'animate-pulse' : ''
+          }`}
+          style={{ width: '65rem', height: '38rem', objectFit: 'fill' }}
+        />
+        <div className="absolute top-[320px] left-0 right-0 flex justify-center -ml-8">
+          <div className="text-center px-4 pointer-events-auto">
+            <p className="font-bold leading-tight drop-shadow-lg transition-all duration-300 hover:scale-125 transform cursor-pointer" 
+               style={{ 
+                 fontSize: '12px',
+                 color: '#0f172a',
+                 textShadow: '2px 2px 4px rgba(0,0,0,0.8), 0 0 8px rgba(15, 23, 42, 0.6)',
+                 fontFamily: 'serif'
+               }}>
+              חיה שרה לאה<br/>
+              בת אורי
+            </p>
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
-}
+};
+
+export default Candle;

@@ -120,7 +120,7 @@ router.get('/stats', async (req, res) => {
 
     const stats = {
       total_days_tracked: totalEntries?.total_days || 0,
-      average_rating: totalEntries?.average_rating ? Math.round((totalEntries.average_rating + Number.EPSILON) * 100) / 100 : 0,
+      average_rating: totalEntries?.average_rating ? Math.round((Number(totalEntries.average_rating) + Number.EPSILON) * 100) / 100 : 0,
       total_positive_speech: totalEntries?.total_positive_speech || 0,
       total_avoided_lashon_hara: totalEntries?.total_avoided_lashon_hara || 0,
       total_compliments: totalEntries?.total_compliments || 0,

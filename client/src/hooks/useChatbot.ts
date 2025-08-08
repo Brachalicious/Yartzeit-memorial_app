@@ -1,92 +1,34 @@
 import { useState } from 'react';
-import { ChatMessage } from '@/types/chat';
+import { ChatMessage, AIProvider } from '@/types/chat';
 
-const COMFORT_RESPONSES = {
-  grief: [
-    "I understand you're going through such a difficult time. Losing a mother is one of life's most profound losses. Your pain is real and valid, and it's okay to feel overwhelmed by grief.",
-    
-    "The love between a mother and child is sacred and eternal. Even though she's no longer physically here, that love continues to live within you and guide you.",
-    
-    "Grief is love with nowhere to go. What you're feeling shows the depth of your connection with your mother. Allow yourself to feel everything - the sadness, the anger, the longing - it's all part of healing.",
-    
-    "Your mother's soul was special, and the fact that you're here, seeking comfort and remembering her, shows how beautifully she raised you. Her essence lives on through you."
-  ],
-  
-  souls: [
-    "Special souls like your mother come to this world with a unique mission. They touch lives in profound ways, often giving more love than they receive. Their time here may seem too short, but their impact is eternal.",
-    
-    "In Jewish tradition, we believe that some souls are so refined they don't need to stay long in this world. They complete their purpose quickly because they're already so close to perfection.",
-    
-    "Your mother's neshomah (soul) was pure and beautiful. Now that she's returned to her Source, she continues to watch over you and send you blessings from above.",
-    
-    "The brightest stars burn the most intensely. Your mother's soul shone so brightly in this world, and now she illuminates the heavens."
-  ],
-  
-  memory: [
-    "Honoring her memory means living the values she taught you. Every act of kindness you do, every moment of joy you embrace, every life you touch - that's her legacy continuing through you.",
-    
-    "Light candles in her memory, give charity in her name, share stories about her with others. These mitzvot (good deeds) elevate her soul and keep her memory alive.",
-    
-    "The best way to honor a special soul is to become the person they believed you could be. Your mother saw greatness in you - now it's time to see it in yourself.",
-    
-    "Create rituals that connect you to her: cook her favorite recipes, visit places she loved, or simply talk to her. The connection between souls transcends physical boundaries."
-  ],
-  
-  comfort: [
-    "You are not alone in this journey. Your mother's love surrounds you always, and there are people here who care about your healing.",
-    
-    "Healing doesn't mean forgetting - it means learning to carry your love for her in a way that brings you peace rather than only pain.",
-    
-    "Take your time with grief. There's no timeline for healing from such a profound loss. Be gentle with yourself.",
-    
-    "Your tears honor her memory. In Jewish tradition, we say that tears are prayers - and your prayers reach her soul."
-  ],
-  
-  default: [
-    "I'm here to listen and offer comfort. Losing someone so precious is never easy, and your feelings are completely valid.",
-    
-    "Would you like to share a memory of your mother? Sometimes talking about the beautiful moments can bring both tears and healing.",
-    
-    "Remember that grief is a reflection of love. The depth of your sorrow shows the depth of your connection with her.",
-    
-    "Your mother's soul continues to shine. She may be in a different realm now, but the love you shared transcends all boundaries."
-  ]
-};
+const INITIAL_GREETING = `Shalom and welcome to this sacred space of comfort and remembrance. 💜
 
-const getResponseCategory = (input: string): keyof typeof COMFORT_RESPONSES => {
-  const lowerInput = input.toLowerCase();
-  
-  if (lowerInput.includes('grief') || lowerInput.includes('struggling') || lowerInput.includes('pain') || lowerInput.includes('hurt') || lowerInput.includes('difficult')) {
-    return 'grief';
-  }
-  
-  if (lowerInput.includes('soul') || lowerInput.includes('special') || lowerInput.includes('heaven') || lowerInput.includes('spiritual')) {
-    return 'souls';
-  }
-  
-  if (lowerInput.includes('memory') || lowerInput.includes('honor') || lowerInput.includes('remember') || lowerInput.includes('legacy')) {
-    return 'memory';
-  }
-  
-  if (lowerInput.includes('comfort') || lowerInput.includes('help') || lowerInput.includes('support') || lowerInput.includes('lonely')) {
-    return 'comfort';
-  }
-  
-  return 'default';
-};
+I'm here as your spiritual companion on this journey of love and loss. In Jewish tradition, we understand that grief is not something to "get over" but rather sacred work - it's love with nowhere to go, seeking new ways to honor and connect with those whose souls have returned to the Eternal.
+
+This space is dedicated to the memory of Chaya Sara Leah bat Uri, and her light reminds us that the bonds between souls are never truly broken. Whether you're carrying fresh grief, approaching a yahrzeit, or simply missing someone deeply, I'm here to listen with my whole heart.
+
+I can help you explore meaningful ways to honor your loved one's memory - through learning Torah in their merit, saying specific Tehillim, performing acts of kindness, or simply processing the complex emotions that come with loving someone whose physical presence we can no longer embrace.
+
+Please, share what's in your heart today. What would you like to talk about? How are you feeling, and how can I support you in this moment? �️✨`;
 
 export function useChatbot() {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: '1',
-      content: "Shalom and welcome. I'm here to offer comfort and share wisdom about the special souls we love and miss. How are you feeling today?",
+      content: INITIAL_GREETING,
       sender: 'bot',
       timestamp: new Date().toISOString()
     }
   ]);
   const [isTyping, setIsTyping] = useState(false);
+  const [aiProvider, setAIProvider] = useState<AIProvider>('openai'); // Default to OpenAI for better responses
+  const [conversationState, setConversationState] = useState({
+    askedAboutRelationship: false,
+    userRelationship: '',
+    context: []
+  });
 
-  const sendMessage = async (content: string) => {
+  const sendMessage = async (content: string, files?: File[], audio?: Blob) => {
     // Add user message
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
@@ -98,28 +40,84 @@ export function useChatbot() {
     setMessages(prev => [...prev, userMessage]);
     setIsTyping(true);
     
-    // Simulate typing delay
-    await new Promise(resolve => setTimeout(resolve, 1500 + Math.random() * 1000));
+    // Update conversation context
+    const newContext = [...conversationState.context, content].slice(-5); // Keep last 5 messages
     
-    // Get appropriate response
-    const category = getResponseCategory(content);
-    const responses = COMFORT_RESPONSES[category];
-    const response = responses[Math.floor(Math.random() * responses.length)];
+    try {
+      // Prepare form data for file uploads
+      const formData = new FormData();
+      formData.append('message', content);
+      formData.append('context', newContext.join(' | '));
+      formData.append('relationship', conversationState.userRelationship);
+      formData.append('aiProvider', aiProvider);
+
+      // Add files if provided
+      if (files && files.length > 0) {
+        files.forEach((file, index) => {
+          formData.append(`files`, file);
+        });
+      }
+
+      // Add audio if provided
+      if (audio) {
+        formData.append('audio', audio, 'recording.wav');
+      }
+
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        body: formData, // Use FormData instead of JSON for file uploads
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        
+        // Create bot response
+        const botMessage: ChatMessage = {
+          id: (Date.now() + 1).toString(),
+          content: data.message,
+          sender: 'bot',
+          timestamp: new Date().toISOString()
+        };
+        
+        setMessages(prev => [...prev, botMessage]);
+        setConversationState(prev => ({
+          ...prev,
+          context: newContext
+        }));
+      } else {
+        // Show error message if API fails
+        const errorMessage: ChatMessage = {
+          id: (Date.now() + 1).toString(),
+          content: "I'm sorry, I'm having trouble connecting right now. Please try again in a moment.",
+          sender: 'bot',
+          timestamp: new Date().toISOString()
+        };
+        setMessages(prev => [...prev, errorMessage]);
+      }
+    } catch (error) {
+      console.error('API call failed:', error);
+      // Show error message if API fails
+      const errorMessage: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        content: "I'm sorry, I'm having trouble connecting right now. Please try again in a moment.",
+        sender: 'bot',
+        timestamp: new Date().toISOString()
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    }
     
-    const botMessage: ChatMessage = {
-      id: (Date.now() + 1).toString(),
-      content: response,
-      sender: 'bot',
-      timestamp: new Date().toISOString()
-    };
-    
-    setMessages(prev => [...prev, botMessage]);
+    setConversationState(prev => ({
+      ...prev,
+      context: newContext
+    }));
     setIsTyping(false);
   };
 
   return {
     messages,
     sendMessage,
-    isTyping
+    isTyping,
+    aiProvider,
+    setAIProvider
   };
 }

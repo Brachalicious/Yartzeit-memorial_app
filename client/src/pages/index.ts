@@ -5,3 +5,5 @@ export { LettersPage } from './LettersPage';
 export { CandlePage } from './CandlePage';
 export { ChatPage } from './ChatPage';
 export { LearningPage } from './LearningPage';
+export { KotelLivePage } from './KotelLivePage';
+export { ResourcesPage } from './ResourcesPage';

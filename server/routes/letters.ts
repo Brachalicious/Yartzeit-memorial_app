@@ -27,7 +27,7 @@ router.get('/', async (req, res) => {
 // Create new letter
 router.post('/', async (req, res) => {
   try {
-    const { content } = req.body;
+    const { content, mailbox, recipient, sender } = req.body;
     
     if (!content || !content.trim()) {
       res.status(400).json({ error: 'Letter content is required' });
@@ -40,6 +40,9 @@ router.post('/', async (req, res) => {
       .insertInto('letters')
       .values({
         content: content.trim(),
+        mailbox: mailbox || null,
+        recipient: recipient || null,
+        sender: sender || null,
         created_at: new Date().toISOString()
       })
       .returning('id')
@@ -74,7 +77,7 @@ router.delete('/:id', async (req, res) => {
       .where('id', '=', numericId)
       .executeTakeFirst();
     
-    if (result.numDeletedRows === 0) {
+    if (Number(result.numDeletedRows) === 0) {
       res.status(404).json({ error: 'Letter not found' });
       return;
     }

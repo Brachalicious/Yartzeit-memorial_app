@@ -50,14 +50,14 @@ export function ManageEntriesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">Manage Entries</h2>
-          <p className="text-muted-foreground mt-2">
-            View, edit, and manage all your yahrzeit entries
-          </p>
-        </div>
-        <div className="text-sm text-muted-foreground">
+      <div className="text-center py-8 bg-gradient-to-r from-blue-50 via-amber-50 to-blue-50 rounded-lg border border-blue-200 shadow-lg">
+        <h2 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-600 via-amber-500 to-blue-600 bg-clip-text text-transparent mb-3">
+          Manage Entries
+        </h2>
+        <p className="text-lg bg-gradient-to-r from-blue-700 via-amber-600 to-blue-700 bg-clip-text text-transparent">
+          View, edit, and manage all your yahrzeit entries
+        </p>
+        <div className="mt-4 text-sm bg-gradient-to-r from-blue-600 via-amber-500 to-blue-600 bg-clip-text text-transparent font-semibold">
           {entries.length} {entries.length === 1 ? 'entry' : 'entries'}
         </div>
       </div>

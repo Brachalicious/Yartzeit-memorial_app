@@ -31,7 +31,7 @@ class ErrorBoundary extends React.Component {
             </h1>
             
             <div className="text-lg text-amber-700 mb-2" dir="rtl">
-              ליועלי נשמת חיה שרה לאה בת אורי
+              ליועלי נשמת חיה שרה לאה בת אורי ז״ל
             </div>
             
             <p className="text-amber-600 mb-6">

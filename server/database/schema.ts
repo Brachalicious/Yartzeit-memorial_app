@@ -14,6 +14,9 @@ export interface YahrzeitEntry {
 export interface Letter {
   id: number;
   content: string;
+  mailbox?: string;
+  recipient?: string;
+  sender?: string;
   created_at: string;
 }
 
@@ -52,10 +55,21 @@ export interface ShmirasHalashonEntry {
   created_at: string;
 }
 
+export interface SharedLearningEntry {
+  id: number;
+  learner_name: string;
+  learning_type: 'tehillim' | 'torah' | 'mishnah' | 'gemara' | 'other';
+  learning_details: string | null;
+  learning_date: string;
+  notes: string | null;
+  created_at: string;
+}
+
 export interface DatabaseSchema {
   yahrzeit_entries: YahrzeitEntry;
   letters: Letter;
   learning_activities: LearningActivity;
   tehillim_chapters: TehillimChapter;
   shmiras_halashon_entries: ShmirasHalashonEntry;
+  shared_learning_entries: SharedLearningEntry;
 }

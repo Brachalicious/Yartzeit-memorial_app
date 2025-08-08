@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Calendar, Settings, Heart, Flame, MessageCircle, BookOpen } from 'lucide-react';
+import { Calendar, Settings, Heart, Flame, MessageCircle, BookOpen, ImageIcon, Building2, Library } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export function Navigation() {
@@ -8,81 +8,74 @@ export function Navigation() {
 
   return (
     <nav className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container mx-auto px-4">
-        <div className="flex h-16 items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <h1 className="text-xl font-bold">Yahrzeit Tracker</h1>
+      <div className="container mx-auto px-4 py-2">
+        <div className="flex flex-col items-center justify-center gap-2 sm:flex-row sm:justify-between">
+          
+          {/* Title */}
+          <div className="text-xl font-bold text-center sm:text-left">
+            Yahrzeit Tracker
           </div>
           
-          <div className="flex items-center space-x-2">
-            <Button
-              asChild
-              variant={location.pathname === '/yahrzeit' ? 'default' : 'ghost'}
-              size="sm"
-            >
-              <Link to="/yahrzeit" className="flex items-center gap-2">
-                <Calendar className="h-4 w-4" />
-                Dashboard
-              </Link>
-            </Button>
+          {/* Navigation Buttons */}
+          <div className="flex flex-wrap justify-center items-center gap-2">
+            <NavButton to="/yahrzeit" active={location.pathname === '/yahrzeit'}>
+              <Calendar className="h-4 w-4" />
+              Dashboard
+            </NavButton>
+
+            <NavButton to="/manage" active={location.pathname === '/manage'}>
+              <Settings className="h-4 w-4" />
+              Manage Entries
+            </NavButton>
+
+            <NavButton to="/candle" active={location.pathname === '/candle'}>
+              <Flame className="h-4 w-4" />
+              Light Candle
+            </NavButton>
             
-            <Button
-              asChild
-              variant={location.pathname === '/manage' ? 'default' : 'ghost'}
-              size="sm"
-            >
-              <Link to="/manage" className="flex items-center gap-2">
-                <Settings className="h-4 w-4" />
-                Manage Entries
-              </Link>
-            </Button>
+            <NavButton to="/letters" active={location.pathname === '/letters'}>
+              <Heart className="h-4 w-4" />
+              Letters
+            </NavButton>
 
-            <Button
-              asChild
-              variant={location.pathname === '/candle' ? 'default' : 'ghost'}
-              size="sm"
-            >
-              <Link to="/candle" className="flex items-center gap-2">
-                <Flame className="h-4 w-4" />
-                Light Candle
-              </Link>
-            </Button>
+            <NavButton to="/memorial" active={location.pathname === '/memorial'}>
+              <ImageIcon className="h-4 w-4" />
+              Upload Memories
+            </NavButton>
 
-            <Button
-              asChild
-              variant={location.pathname === '/letters' ? 'default' : 'ghost'}
-              size="sm"
-            >
-              <Link to="/letters" className="flex items-center gap-2">
-                <Heart className="h-4 w-4" />
-                Letters
-              </Link>
-            </Button>
+            <NavButton to="/learning" active={location.pathname === '/learning'}>
+              <BookOpen className="h-4 w-4" />
+              Learning
+            </NavButton>
 
-            <Button
-              asChild
-              variant={location.pathname === '/learning' ? 'default' : 'ghost'}
-              size="sm"
-            >
-              <Link to="/learning" className="flex items-center gap-2">
-                <BookOpen className="h-4 w-4" />
-                Learning
-              </Link>
-            </Button>
+            <NavButton to="/kotel-live" active={location.pathname === '/kotel-live'}>
+              <Building2 className="h-4 w-4" />
+              Kotel Live
+            </NavButton>
 
-            <Button
-              asChild
-              variant={location.pathname === '/chat' ? 'default' : 'ghost'}
-              size="sm"
-            >
-              <Link to="/chat" className="flex items-center gap-2">
-                <MessageCircle className="h-4 w-4" />
-                Comfort
-              </Link>
-            </Button>
+            <NavButton to="/resources" active={location.pathname === '/resources'}>
+              <Library className="h-4 w-4" />
+              Resources
+            </NavButton>
+
+            <NavButton to="/chat" active={location.pathname === '/chat'}>
+              <MessageCircle className="h-4 w-4" />
+              Comfort
+            </NavButton>
           </div>
         </div>
       </div>
     </nav>
+  );
+}
+
+// Reusable NavButton component
+function NavButton({ to, active, children }: { to: string; active: boolean; children: React.ReactNode }) {
+  return (
+    <Button asChild variant={active ? 'default' : 'ghost'} size="sm">
+      <Link to={to} className="flex items-center gap-2">
+        {children}
+      </Link>
+    </Button>
   );
 }

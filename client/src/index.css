@@ -61,15 +61,29 @@
 
 @layer base {
   * {
-    @apply border-border;
+    border-color: hsl(var(--border));
   }
   
   body {
-    @apply bg-background text-foreground;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    /* Combined and fixed body styles */
+    @apply bg-background text-foreground font-sans antialiased min-h-screen;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; /* Keep specific font stack */
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+
+    /* If you want the Kotel image as a background for the *entire* page: */
+    /*
+    background-image: url('/Kotel.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    */
+    /* NOTE: The HTML has <img src="/Kotel.png" /> directly,
+       so this background-image on body might not be needed
+       or might cause an unwanted layering effect.
+       If the HTML <img> is preferred, remove this.
+    */
   }
   
   h1, h2, h3, h4, h5, h6 {
@@ -80,6 +94,106 @@
   p {
     margin-bottom: 1rem;
   }
+
+  /*
+    Original loading candle animation keyframes.
+    It's good that these are in @layer base as they are foundational.
+  */
+  @keyframes flicker {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.02); }
+  }
+  
+  @keyframes flame {
+    0% { transform: translateX(-50%) scale(1) rotate(-1deg); }
+    100% { transform: translateX(-50%) scale(1.1) rotate(1deg); }
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  /* Styles for the interactive candle (now in style.css) */
+  .candle-wrapper {
+      position: relative; /* Needed for absolute positioning of the overlay */
+      display: flex; /* Use flexbox to center the candle */
+      justify-content: center;
+      align-items: center;
+      margin-top: 20px; /* Add some space from the Kotel image */
+      margin-bottom: 20px; /* Add some space before the loading container */
+  }
+
+  #candle {
+      display: block; /* Ensures no extra space below the image */
+      max-width: 300px; /* Adjust as needed, e.g., 300px */
+      width: 80%; /* Make it responsive */
+      height: auto;
+      cursor: pointer; /* Indicates it's clickable */
+      transition: transform 0.1s ease-in-out; /* Smooth transition for click feedback */
+  }
+
+  #candle:active {
+    transform: scale(0.98); /* Slight scale down on click */
+  }
+
+  /* CSS for flickering animation */
+  @keyframes advancedFlicker {
+      0% {
+          transform: scale(1);
+          filter: brightness(1);
+          opacity: 1;
+      }
+      20% {
+          transform: scale(0.99);
+          filter: brightness(1.1);
+          opacity: 0.98;
+      }
+      40% {
+          transform: scale(1.01);
+          filter: brightness(0.95);
+          opacity: 1.02;
+      }
+      60% {
+          transform: scale(0.995);
+          filter: brightness(1.05);
+          opacity: 0.99;
+      }
+      80% {
+          transform: scale(1.005);
+          filter: brightness(0.98);
+          opacity: 1.01;
+      }
+      100% {
+          transform: scale(1);
+          filter: brightness(1);
+          opacity: 1;
+      }
+  }
+
+  /* Apply this class when the candle is lit */
+  #candle.flickering {
+      animation: advancedFlicker 0.2s infinite alternate; /* Adjust duration for flicker speed */
+  }
+
+  /* Style for the name overlay */
+  .candle-name-overlay {
+      position: absolute;
+      /* Adjust these values to position the text precisely on your candle image */
+      /* You'll need to experiment with these percentages based on your image */
+      top: 50%; /* Vertical position (e.g., 40% for higher, 60% for lower) */
+      left: 50%; /* Horizontal position */
+      transform: translate(-50%, -50%); /* Centers the element precisely */
+      
+      font-size: 1.2rem; /* Adjust font size to fit the label area */
+      font-weight: bold;
+      color: #333; /* Dark color for visibility against the candle's background */
+      text-align: center;
+      white-space: nowrap; /* Prevent text from wrapping */
+      z-index: 10; /* Ensures the text is on top of the image */
+
+      /* Optional: Add a subtle text shadow for better readability */
+      text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.7); 
+  }
 }
 
 @layer components {
@@ -88,6 +202,8 @@
     @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring;
     @apply disabled:pointer-events-none disabled:opacity-50;
   }
+
+  /* You might have other custom components here */
 }
 
 @layer utilities {
@@ -100,4 +216,35 @@
     outline-offset: 2px;
     box-shadow: 0 0 0 1px hsl(var(--ring));
   }
+
+  /* You might have other custom utilities here */
 }
+
+/* Global Music Player - Fixed Positioning */
+.music-player-fixed {
+  position: fixed !important;
+  bottom: 1.5rem !important;
+  right: 1.5rem !important;
+  z-index: 9999 !important;
+  pointer-events: auto !important;
+}
+
+/* Ensure the music player doesn't interfere with page scrolling */
+.music-player-fixed * {
+  pointer-events: auto !important;
+}
+
+/* Add some padding to prevent content from going under the music button */
+.main-content {
+  padding-bottom: 6rem;
+}
+
+/* Ensure tooltips appear above everything */
+.music-tooltip {
+  z-index: 10000 !important;
+}
+
+/*
+  Removed conflicting body styles from the very end.
+  They were already handled within @layer base.
+*/

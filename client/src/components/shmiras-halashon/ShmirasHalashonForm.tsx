@@ -221,10 +221,73 @@ export function ShmirasHalashonForm({ onSubmit, initialData, selectedDate }: Shm
             </div>
           </div>
 
-          <Button type="submit" disabled={submitting} className="w-full">
-            <Check className="h-4 w-4 mr-2" />
-            {submitting ? 'Saving...' : initialData ? 'Update Reflection' : 'Save Daily Reflection'}
-          </Button>
+          <div className="flex gap-2">
+            <Button type="submit" disabled={submitting} className="flex-1">
+              <Check className="h-4 w-4 mr-2" />
+              {submitting ? 'Saving...' : initialData ? 'Update Reflection' : 'Save Daily Reflection'}
+            </Button>
+
+            {/* Share Shmiras Halashon Button */}
+            <Button
+              type="button"
+              onClick={() => {
+                const shareText = `🕯️ Today I worked on Shmiras HaLashon in memory of Chaya Sara Leah Bas Uri zt"l
+
+🛡️ Speech Guarding Reflection for ${new Date(selectedDate).toLocaleDateString()}:
+• Positive speech: ${formData.positive_speech_count}/10
+• Avoided negative speech: ${formData.avoided_lashon_hara}/10  
+• Gave compliments: ${formData.gave_compliments}/10
+• Overall rating: ${formData.overall_rating}/5 stars
+
+${formData.daily_goal ? `🎯 Today's goal: ${formData.daily_goal}` : ''}
+${formData.reflection_notes ? `💭 Reflection: ${formData.reflection_notes}` : ''}
+
+Join me in guarding speech to elevate her holy neshomah: ${window.location.href}
+
+לעילוי נשמת חיה שרה לאה בת אורי ז״ל`;
+
+                const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
+                const emailUrl = `mailto:?subject=${encodeURIComponent('Shmiras HaLashon for Chaya Sara Leah')}&body=${encodeURIComponent(shareText)}`;
+                
+                // Create share menu
+                const shareMenu = document.createElement('div');
+                shareMenu.style.cssText = `
+                  position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+                  background: white; border-radius: 12px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+                  padding: 20px; z-index: 1000; min-width: 300px;
+                `;
+                
+                shareMenu.innerHTML = `
+                  <h3 style="margin: 0 0 15px 0; font-weight: bold; color: #1e40af;">Share Speech Guarding</h3>
+                  <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <button onclick="window.open('${whatsappUrl}', '_blank'); document.body.removeChild(document.querySelector('[data-speech-menu]'))" 
+                            style="background: #25d366; color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold;">
+                      📱 Share via WhatsApp
+                    </button>
+                    <button onclick="window.open('${emailUrl}', '_blank'); document.body.removeChild(document.querySelector('[data-speech-menu]'))" 
+                            style="background: #ea4335; color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold;">
+                      📧 Share via Email
+                    </button>
+                    <button onclick="navigator.clipboard.writeText('${shareText.replace(/'/g, "\\'")}'); alert('📋 Speech reflection shared!'); document.body.removeChild(document.querySelector('[data-speech-menu]'))" 
+                            style="background: #6366f1; color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold;">
+                      📋 Copy to Clipboard
+                    </button>
+                    <button onclick="document.body.removeChild(document.querySelector('[data-speech-menu]'))" 
+                            style="background: #6b7280; color: white; border: none; padding: 8px; border-radius: 8px; cursor: pointer;">
+                      Cancel
+                    </button>
+                  </div>
+                `;
+                
+                shareMenu.setAttribute('data-speech-menu', 'true');
+                document.body.appendChild(shareMenu);
+              }}
+              variant="outline"
+              className="bg-green-50 hover:bg-green-100 text-green-700 border-green-200"
+            >
+              📤 Share Progress
+            </Button>
+          </div>
         </form>
       </CardContent>
     </Card>
