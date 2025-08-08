@@ -1,144 +1,74 @@
 import { useState, useEffect } from 'react';
-import { YahrzeitEntry, UpcomingYahrzeit, YahrzeitFormData } from '@/types/yahrzeit';
+import { YahrzeitEntry, YahrzeitFormData } from '@/types/yahrzeit';
+import { db } from '@/lib/firebase';
+import { collection, query, where, getDocs, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore';
 
 export function useYahrzeit() {
   const [entries, setEntries] = useState<YahrzeitEntry[]>([]);
-  const [upcomingYahrzeits, setUpcomingYahrzeits] = useState<UpcomingYahrzeit[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  const fetchWithRetry = async (url: string, options?: RequestInit) => {
-    let attempt = 0;
-    const maxAttempts = 3;
-    
-    while (attempt < maxAttempts) {
-      try {
-        const response = await fetch(url, {
-          ...options,
-          headers: {
-            'Content-Type': 'application/json',
-            ...options?.headers,
-          },
-        });
-        
-        if (!response.ok) {
-          const errorText = await response.text();
-          throw new Error(`Server error: ${response.status} - ${errorText}`);
-        }
-        
-        return response;
-      } catch (networkError) {
-        attempt++;
-        console.warn(`Network attempt ${attempt} failed for ${url}:`, networkError);
-        if (attempt >= maxAttempts) {
-          throw new Error('Network connection failed. Please check your internet connection and try again.');
-        }
-        // Wait before retrying
-        await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
-      }
-    }
-    
-    throw new Error('Maximum retry attempts reached');
-  };
+  const user = JSON.parse(localStorage.getItem('user') || 'null');
 
   const fetchEntries = async () => {
+    if (!user) return;
+    setLoading(true);
     try {
-      console.log('Fetching yahrzeit entries...');
-      const response = await fetchWithRetry('/api/yahrzeit');
-      const data = await response.json();
-      console.log('Fetched entries:', data);
-      setEntries(data);
+      const q = query(collection(db, 'yahrzeit_entries'), where('userId', '==', user.uid));
+      const snapshot = await getDocs(q);
+      setEntries(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as YahrzeitEntry)));
     } catch (err) {
-      console.error('Error fetching entries:', err);
-      setError(err instanceof Error ? err.message : 'Failed to fetch entries');
+      setError('Failed to fetch entries');
     }
-  };
-
-  const fetchUpcomingYahrzeits = async () => {
-    try {
-      console.log('Fetching upcoming yahrzeits...');
-      const response = await fetchWithRetry('/api/yahrzeit/upcoming');
-      const data = await response.json();
-      console.log('Fetched upcoming yahrzeits:', data);
-      setUpcomingYahrzeits(data);
-    } catch (err) {
-      console.error('Error fetching upcoming yahrzeits:', err);
-      setError(err instanceof Error ? err.message : 'Failed to fetch upcoming yahrzeits');
-    }
+    setLoading(false);
   };
 
   const createEntry = async (formData: YahrzeitFormData) => {
+    if (!user) return;
+    setLoading(true);
     try {
-      console.log('Creating yahrzeit entry:', formData);
-      const response = await fetchWithRetry('/api/yahrzeit', {
-        method: 'POST',
-        body: JSON.stringify(formData),
-      });
-      
+      await addDoc(collection(db, 'yahrzeit_entries'), { ...formData, userId: user.uid });
       await fetchEntries();
-      await fetchUpcomingYahrzeits();
-      console.log('Entry created successfully');
     } catch (err) {
-      console.error('Error creating entry:', err);
-      setError(err instanceof Error ? err.message : 'Failed to create entry');
-      throw err;
+      setError('Failed to create entry');
     }
+    setLoading(false);
   };
 
-  const updateEntry = async (id: number, formData: Partial<YahrzeitFormData>) => {
+  const updateEntry = async (id: string, formData: Partial<YahrzeitFormData>) => {
+    if (!user) return;
+    setLoading(true);
     try {
-      console.log('Updating yahrzeit entry:', id, formData);
-      const response = await fetchWithRetry(`/api/yahrzeit/${id}`, {
-        method: 'PUT',
-        body: JSON.stringify(formData),
-      });
-      
+      await updateDoc(doc(db, 'yahrzeit_entries', id), formData);
       await fetchEntries();
-      await fetchUpcomingYahrzeits();
-      console.log('Entry updated successfully');
     } catch (err) {
-      console.error('Error updating entry:', err);
-      setError(err instanceof Error ? err.message : 'Failed to update entry');
-      throw err;
+      setError('Failed to update entry');
     }
+    setLoading(false);
   };
 
-  const deleteEntry = async (id: number) => {
+  const deleteEntry = async (id: string) => {
+    if (!user) return;
+    setLoading(true);
     try {
-      console.log('Deleting yahrzeit entry:', id);
-      const response = await fetchWithRetry(`/api/yahrzeit/${id}`, {
-        method: 'DELETE',
-      });
-      
+      await deleteDoc(doc(db, 'yahrzeit_entries', id));
       await fetchEntries();
-      await fetchUpcomingYahrzeits();
-      console.log('Entry deleted successfully');
     } catch (err) {
-      console.error('Error deleting entry:', err);
-      setError(err instanceof Error ? err.message : 'Failed to delete entry');
-      throw err;
+      setError('Failed to delete entry');
     }
+    setLoading(false);
   };
 
   useEffect(() => {
-    const loadData = async () => {
-      setLoading(true);
-      setError(null);
-      await Promise.all([fetchEntries(), fetchUpcomingYahrzeits()]);
-      setLoading(false);
-    };
-    
-    loadData();
+    fetchEntries();
   }, []);
 
   return {
     entries,
-    upcomingYahrzeits,
     loading,
     error,
     createEntry,
     updateEntry,
     deleteEntry,
-    refetch: () => Promise.all([fetchEntries(), fetchUpcomingYahrzeits()])
+    refetch: fetchEntries
   };
 }

@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { ChatMessage, AIProvider } from '@/types/chat';
+import { db } from '@/lib/firebase';
+import { collection, query, where, getDocs, addDoc } from 'firebase/firestore';
 
 const INITIAL_GREETING = `Shalom and welcome to this sacred space of comfort and remembrance. 💜
 
@@ -27,6 +29,8 @@ export function useChatbot() {
     userRelationship: '',
     context: []
   });
+
+  const user = JSON.parse(localStorage.getItem('user') || 'null');
 
   const sendMessage = async (content: string, files?: File[], audio?: Blob) => {
     // Add user message
@@ -112,6 +116,27 @@ export function useChatbot() {
       }
     ]);
     setIsTyping(false);
+
+    // Save user message to Firestore
+    if (user) {
+      await addDoc(collection(db, 'chat_logs'), {
+        userId: user.uid,
+        content,
+        sender: 'user',
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    // Save bot reply to Firestore
+    if (user) {
+      await addDoc(collection(db, 'chat_logs'), {
+        userId: user.uid,
+        content: reply,
+        sender: 'bot',
+        timestamp: new Date().toISOString()
+      });
+    }
+
     return;
   };
 

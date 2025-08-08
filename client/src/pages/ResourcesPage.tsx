@@ -5,6 +5,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { ExternalLink, Heart, BookOpen, Users, Lightbulb, Star, Video, Plus, Share, X } from 'lucide-react';
+import { db } from '@/lib/firebase';
+import { addDoc, collection, query, where, getDocs, deleteDoc, doc } from 'firebase/firestore';
 
 export function ResourcesPage() {
   const [selectedCategory, setSelectedCategory] = React.useState("All");
@@ -22,22 +24,33 @@ export function ResourcesPage() {
     dateAdded: string;
   }>>([]);
 
-  // Load custom videos from localStorage on component mount
-  React.useEffect(() => {
-    const savedVideos = localStorage.getItem('resourceVideos');
-    if (savedVideos) {
-      try {
-        setCustomVideos(JSON.parse(savedVideos));
-      } catch (error) {
-        console.log('Error loading saved videos:', error);
-      }
-    }
-  }, []);
+  const user = JSON.parse(localStorage.getItem('user') || 'null');
 
-  // Save custom videos to localStorage whenever they change
+  // Load custom videos from Firestore on component mount
   React.useEffect(() => {
-    localStorage.setItem('resourceVideos', JSON.stringify(customVideos));
-  }, [customVideos]);
+    const fetchVideos = async () => {
+      if (user) {
+        const q = query(collection(db, 'resource_videos'), where('userId', '==', user.uid));
+        const querySnapshot = await getDocs(q);
+        const videos = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        setCustomVideos(videos);
+      }
+    };
+
+    fetchVideos();
+  }, [user]);
+
+  // Save custom videos to Firestore whenever they change
+  React.useEffect(() => {
+    if (user) {
+      customVideos.forEach(async (video) => {
+        await addDoc(collection(db, 'resource_videos'), {
+          ...video,
+          userId: user.uid,
+        });
+      });
+    }
+  }, [customVideos, user]);
 
   // Extract YouTube video ID from URL
   const extractYouTubeId = (url: string): string | null => {

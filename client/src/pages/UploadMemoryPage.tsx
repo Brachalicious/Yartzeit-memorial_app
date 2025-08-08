@@ -5,6 +5,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { db } from '@/lib/firebase';
+import { addDoc, collection } from 'firebase/firestore';
 
 export function UploadMemoryPage() {
   const [selectedFiles, setSelectedFiles] = React.useState<File[]>([]);
@@ -16,6 +18,8 @@ export function UploadMemoryPage() {
 
   // Available stickers
   const stickers = ['🌟', '💖', '🌸', '🦋', '🌈', '💫', '🕊️', '🌺', '💝', '🎀', '🌹', '✨'];
+
+  const user = JSON.parse(localStorage.getItem('user') || 'null');
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -47,17 +51,18 @@ export function UploadMemoryPage() {
       return;
     }
 
-    const formData = new FormData();
-    selectedFiles.forEach(file => {
-      formData.append('files', file);
-    });
-    formData.append('memoryType', memoryType);
-    formData.append('albumName', albumName);
-    formData.append('feelings', feelings);
-    formData.append('stickers', JSON.stringify(selectedStickers));
-
     try {
-      // For now, just show success message since backend endpoint needs to be created
+      if (user) {
+        await addDoc(collection(db, 'memories'), {
+          userId: user.uid,
+          memoryType,
+          albumName,
+          feelings,
+          stickers: selectedStickers,
+          files: selectedFiles.map(f => ({ name: f.name, type: f.type })), // For now, just save file info
+          createdAt: new Date().toISOString()
+        });
+      }
       alert(`${memoryType === 'album' ? 'Album' : 'Scrapbook'} "${albumName}" created successfully with ${selectedFiles.length} files!`);
       
       // Reset form

@@ -2,14 +2,35 @@ import * as React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Candle from '@/components/candle/Candle';
+import { db } from '@/lib/firebase';
+import { addDoc, collection, query, where, getDocs } from 'firebase/firestore';
 
 export function CandlePage() {
   const [isLit, setIsLit] = React.useState(false);
   const [lastLit, setLastLit] = React.useState<Date | null>(null);
+  const user = JSON.parse(localStorage.getItem('user') || 'null');
 
-  const handleLightCandle = () => {
+  React.useEffect(() => {
+    if (!user) return;
+    const fetchLitTimes = async () => {
+      const q = query(collection(db, 'candle_lit_times'), where('userId', '==', user.uid));
+      const snapshot = await getDocs(q);
+      if (snapshot.docs.length > 0) {
+        const latest = snapshot.docs[0].data();
+        setIsLit(true);
+        setLastLit(new Date(latest.litAt));
+      }
+    };
+    fetchLitTimes();
+  }, [user]);
+
+  const handleLightCandle = async () => {
     setIsLit(true);
-    setLastLit(new Date());
+    const litAt = new Date();
+    setLastLit(litAt);
+    if (user) {
+      await addDoc(collection(db, 'candle_lit_times'), { userId: user.uid, litAt: litAt.toISOString() });
+    }
   };
 
   const handleBlowOut = () => {

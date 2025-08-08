@@ -140,6 +140,31 @@ function initializeTables(db) {
       )
     `);
 
+    // Create users table
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        email TEXT NOT NULL UNIQUE,
+        password TEXT NOT NULL,
+        name TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Create shared_learning_entries table
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS shared_learning_entries (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        learner_name TEXT,
+        learning_type TEXT,
+        learning_details TEXT,
+        learning_date TEXT,
+        notes TEXT,
+        user_id INTEGER,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
     // Create indexes
     db.exec(`
       CREATE INDEX IF NOT EXISTS idx_yahrzeit_entries_name ON yahrzeit_entries(name);
@@ -176,6 +201,19 @@ function initializeTables(db) {
         console.log('Note: Could not add sample entry (may already exist)');
       }
     }
+
+    // Add user_id to yahrzeit_entries
+    try { db.exec(`ALTER TABLE yahrzeit_entries ADD COLUMN user_id INTEGER`); } catch (e) {}
+    // Add user_id to letters
+    try { db.exec(`ALTER TABLE letters ADD COLUMN user_id INTEGER`); } catch (e) {}
+    // Add user_id to learning_activities
+    try { db.exec(`ALTER TABLE learning_activities ADD COLUMN user_id INTEGER`); } catch (e) {}
+    // Add user_id to tehillim_chapters
+    try { db.exec(`ALTER TABLE tehillim_chapters ADD COLUMN user_id INTEGER`); } catch (e) {}
+    // Add user_id to shmiras_halashon_entries
+    try { db.exec(`ALTER TABLE shmiras_halashon_entries ADD COLUMN user_id INTEGER`); } catch (e) {}
+    // Add user_id to shared_learning_entries
+    try { db.exec(`ALTER TABLE shared_learning_entries ADD COLUMN user_id INTEGER`); } catch (e) {}
 
     console.log('✅ Database initialization completed successfully');
     
@@ -226,3 +264,5 @@ try {
 }
 
 console.log('✅ Database connection module loaded successfully');
+
+export { sqliteDb };

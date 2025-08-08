@@ -1,4 +1,6 @@
 import * as React from 'react';
+import { db } from '@/lib/firebase';
+import { addDoc, collection } from 'firebase/firestore';
 
 type MusicContextType = {
   currentSong: string | null;
@@ -16,6 +18,8 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
     setCurrentSong(null);
   };
 
+  const user = JSON.parse(localStorage.getItem('user') || 'null');
+
   const handleSetCurrentSong = (song: string | null) => {
     // If a song is already playing and a new song is requested, stop the old one first
     if (currentSong && song && currentSong !== song) {
@@ -23,6 +27,14 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
       setTimeout(() => setCurrentSong(song), 100);
     } else {
       setCurrentSong(song);
+    }
+
+    if (user && song) {
+      addDoc(collection(db, 'music_selections'), {
+        userId: user.uid,
+        song,
+        timestamp: new Date().toISOString()
+      });
     }
   };
 

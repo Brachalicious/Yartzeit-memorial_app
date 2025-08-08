@@ -1,100 +1,55 @@
 import { useState, useEffect } from 'react';
 import { LearningActivity, LearningActivityFormData } from '@/types/learning';
+import { db } from '@/lib/firebase';
+import { collection, query, where, getDocs, addDoc, deleteDoc, doc } from 'firebase/firestore';
 
 export function useLearning() {
   const [activities, setActivities] = useState<LearningActivity[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  const fetchWithRetry = async (url: string, options?: RequestInit) => {
-    let attempt = 0;
-    const maxAttempts = 3;
-    
-    while (attempt < maxAttempts) {
-      try {
-        const response = await fetch(url, {
-          ...options,
-          headers: {
-            'Content-Type': 'application/json',
-            ...options?.headers,
-          },
-        });
-        
-        if (!response.ok) {
-          const errorText = await response.text();
-          throw new Error(`Server error: ${response.status} - ${errorText}`);
-        }
-        
-        return response;
-      } catch (networkError) {
-        attempt++;
-        console.warn(`Network attempt ${attempt} failed for ${url}:`, networkError);
-        if (attempt >= maxAttempts) {
-          throw new Error('Network connection failed. Please check your internet connection and try again.');
-        }
-        // Wait before retrying
-        await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
-      }
-    }
-    
-    throw new Error('Maximum retry attempts reached');
-  };
+  const user = JSON.parse(localStorage.getItem('user') || 'null');
 
   const fetchActivities = async () => {
+    if (!user) return;
+    setLoading(true);
     try {
-      console.log('Fetching learning activities...');
-      const response = await fetchWithRetry('/api/learning');
-      const data = await response.json();
-      console.log('Fetched activities:', data);
-      setActivities(data);
+      const q = query(collection(db, 'learning_activities'), where('userId', '==', user.uid));
+      const snapshot = await getDocs(q);
+      setActivities(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as LearningActivity)));
     } catch (err) {
-      console.error('Error fetching activities:', err);
-      setError(err instanceof Error ? err.message : 'Failed to fetch activities');
+      setError('Failed to fetch activities');
     }
+    setLoading(false);
   };
 
   const createActivity = async (formData: LearningActivityFormData) => {
+    if (!user) return;
+    setLoading(true);
     try {
-      console.log('Creating learning activity:', formData);
-      const response = await fetchWithRetry('/api/learning', {
-        method: 'POST',
-        body: JSON.stringify(formData),
-      });
-      
+      await addDoc(collection(db, 'learning_activities'), { ...formData, userId: user.uid });
       await fetchActivities();
-      console.log('Activity saved successfully');
     } catch (err) {
-      console.error('Error creating activity:', err);
-      setError(err instanceof Error ? err.message : 'Failed to save activity');
+      setError('Failed to save activity');
       throw err;
     }
+    setLoading(false);
   };
 
-  const deleteActivity = async (id: number) => {
+  const deleteActivity = async (id: string) => {
+    if (!user) return;
+    setLoading(true);
     try {
-      console.log('Deleting learning activity:', id);
-      const response = await fetchWithRetry(`/api/learning/${id}`, {
-        method: 'DELETE',
-      });
-      
+      await deleteDoc(doc(db, 'learning_activities', id));
       await fetchActivities();
-      console.log('Activity deleted successfully');
     } catch (err) {
-      console.error('Error deleting activity:', err);
-      setError(err instanceof Error ? err.message : 'Failed to delete activity');
+      setError('Failed to delete activity');
       throw err;
     }
+    setLoading(false);
   };
 
   useEffect(() => {
-    const loadData = async () => {
-      setLoading(true);
-      setError(null);
-      await fetchActivities();
-      setLoading(false);
-    };
-    
-    loadData();
+    fetchActivities();
   }, []);
 
   return {

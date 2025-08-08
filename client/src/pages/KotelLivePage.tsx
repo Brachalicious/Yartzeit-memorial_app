@@ -6,6 +6,8 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { BookOpen, ExternalLink, Send, Heart } from 'lucide-react';
 import { useMusic } from '@/contexts/MusicContext';
+import { db } from '@/lib/firebase';
+import { addDoc, collection } from 'firebase/firestore';
 
 export function KotelLivePage() {
   const { currentSong, setCurrentSong } = useMusic();
@@ -28,6 +30,7 @@ export function KotelLivePage() {
   const [noteText, setNoteText] = React.useState('');
   const [noteName, setNoteName] = React.useState('');
   const [noteEmail, setNoteEmail] = React.useState('');
+  const user = JSON.parse(localStorage.getItem('user') || 'null');
 
   // Update time every minute
   React.useEffect(() => {
@@ -525,6 +528,33 @@ export function KotelLivePage() {
     }
   }, [currentSong, selectedSong]);
 
+  // Note submission to Firestore
+  const handleNoteSubmit = async () => {
+    if (!noteText) {
+      alert('Please enter your note');
+      return;
+    }
+    try {
+      if (user) {
+        await addDoc(collection(db, 'kotel_notes'), {
+          userId: user.uid,
+          text: noteText,
+          name: noteName,
+          email: noteEmail,
+          createdAt: new Date().toISOString()
+        });
+      }
+      alert('Note added to the Kotel wall!');
+      setNoteText('');
+      setNoteName('');
+      setNoteEmail('');
+      setShowNoteForm(false);
+    } catch (error) {
+      console.error('Note upload error:', error);
+      alert('Something went wrong.');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-purple-50">
       <div className="max-w-6xl mx-auto py-8 px-4">
@@ -684,7 +714,7 @@ export function KotelLivePage() {
                       
                       <div className="flex flex-col md:flex-row gap-3">
                         <Button
-                          onClick={handlePlaceNote}
+                          onClick={handleNoteSubmit}
                           disabled={!noteText.trim()}
                           className="bg-gradient-to-r from-blue-600 to-amber-600 hover:from-blue-700 hover:to-amber-700 text-white flex items-center gap-2"
                         >

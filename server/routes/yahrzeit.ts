@@ -1,20 +1,22 @@
 import express from 'express';
 import { db } from '../database/connection.js';
 import { HDate } from '@hebcal/hdate';
+import { authenticateJWT } from './users.js';
 
 const router = express.Router();
 
-// Get all yahrzeit entries
-router.get('/', async (req, res) => {
+// Get all yahrzeit entries for logged-in user
+router.get('/', authenticateJWT, async (req, res) => {
   try {
-    console.log('Fetching all yahrzeit entries...');
+    const userId = req.user.id;
     const entries = await db
       .selectFrom('yahrzeit_entries')
       .selectAll()
+      .where('user_id', '=', userId)
       .orderBy('name', 'asc')
       .execute();
     
-    console.log(`Found ${entries.length} yahrzeit entries`);
+    console.log(`Found ${entries.length} yahrzeit entries for user ${userId}`);
     res.json(entries);
   } catch (error) {
     console.error('Error fetching yahrzeit entries:', error);
@@ -22,13 +24,15 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Get upcoming yahrzeits
-router.get('/upcoming', async (req, res) => {
+// Get upcoming yahrzeits for logged-in user
+router.get('/upcoming', authenticateJWT, async (req, res) => {
   try {
-    console.log('Fetching upcoming yahrzeits...');
+    const userId = req.user.id;
+    console.log('Fetching upcoming yahrzeits for user:', userId);
     const entries = await db
       .selectFrom('yahrzeit_entries')
       .selectAll()
+      .where('user_id', '=', userId)
       .execute();
     
     const now = new Date();
@@ -83,7 +87,7 @@ router.get('/upcoming', async (req, res) => {
     // Sort by days until yahrzeit
     upcomingYahrzeits.sort((a, b) => a.days_until - b.days_until);
     
-    console.log(`Found ${upcomingYahrzeits.length} upcoming yahrzeits`);
+    console.log(`Found ${upcomingYahrzeits.length} upcoming yahrzeits for user ${userId}`);
     res.json(upcomingYahrzeits);
   } catch (error) {
     console.error('Error fetching upcoming yahrzeits:', error);
@@ -91,12 +95,13 @@ router.get('/upcoming', async (req, res) => {
   }
 });
 
-// Create new yahrzeit entry
-router.post('/', async (req, res) => {
+// Create new yahrzeit entry for logged-in user
+router.post('/', authenticateJWT, async (req, res) => {
   try {
+    const userId = req.user.id;
     const { name, hebrew_name, death_date, relationship, notes, notify_days_before } = req.body;
     
-    console.log('Creating new yahrzeit entry:', { name, death_date });
+    console.log('Creating new yahrzeit entry for user:', { name, death_date });
     
     // Convert Gregorian date to Hebrew date
     const gregorianDate = new Date(death_date);
@@ -114,6 +119,7 @@ router.post('/', async (req, res) => {
         relationship: relationship || null,
         notes: notes || null,
         notify_days_before: notify_days_before || 7,
+        user_id: userId,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       })
@@ -129,10 +135,11 @@ router.post('/', async (req, res) => {
 });
 
 // Update yahrzeit entry
-router.put('/:id', async (req, res) => {
+router.put('/:id', authenticateJWT, async (req, res) => {
   try {
     const { id } = req.params;
     const { name, hebrew_name, death_date, relationship, notes, notify_days_before } = req.body;
+    const userId = req.user.id;
     
     console.log('Updating yahrzeit entry:', id);
     
@@ -163,6 +170,7 @@ router.put('/:id', async (req, res) => {
       .updateTable('yahrzeit_entries')
       .set(updateData)
       .where('id', '=', parseInt(id))
+      .where('user_id', '=', userId)
       .execute();
     
     console.log('Updated yahrzeit entry:', id);
@@ -174,15 +182,17 @@ router.put('/:id', async (req, res) => {
 });
 
 // Delete yahrzeit entry
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', authenticateJWT, async (req, res) => {
   try {
     const { id } = req.params;
+    const userId = req.user.id;
     
     console.log('Deleting yahrzeit entry:', id);
     
     await db
       .deleteFrom('yahrzeit_entries')
       .where('id', '=', parseInt(id))
+      .where('user_id', '=', userId)
       .execute();
     
     console.log('Deleted yahrzeit entry:', id);

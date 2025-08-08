@@ -3,6 +3,9 @@ import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'r
 import { Navigation } from '@/components/Navigation';
 import { GlobalMusicPlayer } from '@/components/GlobalMusicPlayer';
 import { MusicProvider } from '@/contexts/MusicContext';
+import LoginPage from '@/pages/LoginPage';
+import { auth } from '@/lib/firebase';
+import { onAuthStateChanged } from 'firebase/auth';
 
 // Lazy load pages for better performance
 const YahrzeitPage = React.lazy(() => import('@/pages/YahrzeitPage').then(m => ({ default: m.YahrzeitPage })));
@@ -17,6 +20,9 @@ const ResourcesPage = React.lazy(() => import('@/pages/ResourcesPage').then(m =>
 const MemorialPage = React.lazy(() =>
   import('@/pages/MemorialPage').then((m) => ({ default: m.MemorialPage }))
 );
+const CrisisManagementPage = React.lazy(() => import('@/pages/CrisisManagementPage').then(m => ({ default: m.default })));
+const SignUpPage = React.lazy(() => import('@/pages/SignUpPage').then(m => ({ default: m.default })));
+
 
 function LoadingSpinner() {
   return (
@@ -32,6 +38,19 @@ function LoadingSpinner() {
 function AppContent() {
   const location = useLocation();
   const isKotelLivePage = location.pathname === '/kotel-live';
+  const [loggedIn, setLoggedIn] = React.useState(false);
+
+  React.useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setLoggedIn(!!user);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // Show login page unless logged in
+  if (!loggedIn && location.pathname !== '/login') {
+    return <Navigate to="/login" replace />;
+  }
 
   return (
     <div
@@ -59,6 +78,9 @@ function AppContent() {
       <main className={`main-content w-full px-2 sm:px-4 md:px-6 py-6 sm:py-8 mx-auto ${isKotelLivePage ? '' : 'max-w-5xl bg-white/90 rounded-lg shadow-lg backdrop-blur-md'}`}>
         <React.Suspense fallback={<LoadingSpinner />}>
           <Routes>
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/signup" element={<SignUpPage />} />
+            <Route path="/crisis" element={<CrisisManagementPage />} />
             <Route path="/" element={<Navigate to="/yahrzeit" replace />} />
             <Route path="/yahrzeit" element={<YahrzeitPage />} />
             <Route path="/manage" element={<ManageEntriesPage />} />

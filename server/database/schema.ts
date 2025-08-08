@@ -9,6 +9,7 @@ export interface YahrzeitEntry {
   notify_days_before: number;
   created_at: string;
   updated_at: string;
+  user_id: number;
 }
 
 export interface Letter {
@@ -18,6 +19,7 @@ export interface Letter {
   recipient?: string;
   sender?: string;
   created_at: string;
+  user_id: number;
 }
 
 export interface LearningActivity {
@@ -28,6 +30,7 @@ export interface LearningActivity {
   date_completed: string;
   notes: string | null;
   created_at: string;
+  user_id: number;
 }
 
 export interface TehillimChapter {
@@ -37,6 +40,7 @@ export interface TehillimChapter {
   date_completed: string;
   notes: string | null;
   created_at: string;
+  user_id: number;
 }
 
 export interface ShmirasHalashonEntry {
@@ -53,6 +57,7 @@ export interface ShmirasHalashonEntry {
   improvements_noticed: string | null;
   overall_rating: number;
   created_at: string;
+  user_id: number;
 }
 
 export interface SharedLearningEntry {
@@ -63,9 +68,19 @@ export interface SharedLearningEntry {
   learning_date: string;
   notes: string | null;
   created_at: string;
+  user_id: number;
+}
+
+export interface User {
+  id: number;
+  email: string;
+  password: string;
+  name: string | null;
+  created_at: string;
 }
 
 export interface DatabaseSchema {
+  users: User;
   yahrzeit_entries: YahrzeitEntry;
   letters: Letter;
   learning_activities: LearningActivity;

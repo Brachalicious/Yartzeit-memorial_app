@@ -1,118 +1,56 @@
 import { useState, useEffect } from 'react';
 import { Letter, LetterFormData } from '@/types/letters';
+import { db } from '@/lib/firebase';
+import { collection, query, where, getDocs, addDoc, deleteDoc, doc } from 'firebase/firestore';
 
 export function useLetters() {
   const [letters, setLetters] = useState<Letter[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const user = JSON.parse(localStorage.getItem('user') || 'null');
 
   const fetchLetters = async () => {
+    if (!user) return;
+    setLoading(true);
     try {
-      console.log('Fetching letters...');
-      
-      // Add retry logic for network issues
-      let attempt = 0;
-      const maxAttempts = 3;
-      let response;
-      
-      while (attempt < maxAttempts) {
-        try {
-          response = await fetch('/api/letters', {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-          });
-          break;
-        } catch (networkError) {
-          attempt++;
-          console.warn(`Network attempt ${attempt} failed:`, networkError);
-          if (attempt >= maxAttempts) {
-            throw new Error('Network connection failed. Please check your internet connection and try again.');
-          }
-          // Wait before retrying
-          await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
-        }
-      }
-      
-      if (!response) {
-        throw new Error('Failed to connect to server');
-      }
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Server error: ${response.status} - ${errorText}`);
-      }
-      
-      const data = await response.json();
-      console.log('Fetched letters:', data);
-      setLetters(data);
+      const q = query(collection(db, 'letters'), where('userId', '==', user.uid));
+      const snapshot = await getDocs(q);
+      setLetters(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Letter)));
       setError(null);
     } catch (err) {
-      console.error('Error fetching letters:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch letters';
-      setError(errorMessage);
+      setError('Failed to fetch letters');
     }
+    setLoading(false);
   };
 
   const createLetter = async (formData: LetterFormData) => {
+    if (!user) return;
+    setLoading(true);
     try {
-      console.log('Creating letter:', formData);
-      
-      const response = await fetch('/api/letters', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Failed to save letter: ${response.status} - ${errorText}`);
-      }
-      
+      await addDoc(collection(db, 'letters'), { ...formData, userId: user.uid });
       await fetchLetters();
-      console.log('Letter saved successfully');
     } catch (err) {
-      console.error('Error creating letter:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Failed to save letter';
-      setError(errorMessage);
+      setError('Failed to save letter');
       throw err;
     }
+    setLoading(false);
   };
 
-  const deleteLetter = async (id: number) => {
+  const deleteLetter = async (id: string) => {
+    if (!user) return;
+    setLoading(true);
     try {
-      console.log('Deleting letter:', id);
-      
-      const response = await fetch(`/api/letters/${id}`, {
-        method: 'DELETE',
-      });
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Failed to delete letter: ${response.status} - ${errorText}`);
-      }
-      
+      await deleteDoc(doc(db, 'letters', id));
       await fetchLetters();
-      console.log('Letter deleted successfully');
     } catch (err) {
-      console.error('Error deleting letter:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Failed to delete letter';
-      setError(errorMessage);
+      setError('Failed to delete letter');
       throw err;
     }
+    setLoading(false);
   };
 
   useEffect(() => {
-    const loadData = async () => {
-      setLoading(true);
-      await fetchLetters();
-      setLoading(false);
-    };
-    
-    loadData();
+    fetchLetters();
   }, []);
 
   return {
